@@ -1,0 +1,35 @@
+{
+  "name": "nuxt-music-player",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev --host",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier . --write",
+    "prepare": "husky",
+    "precommit": "node ./.husky/scripts/updateVersion.js && git add package.json"
+  },
+  "dependencies": {
+    "@pinia/nuxt": "^0.11.0",
+    "nuxt": "^3.17.5",
+    "pinia": "^3.0.2",
+    "spark-md5": "^3.0.2",
+    "vue": "^3.5.16",
+    "vue-router": "^4.5.1"
+  },
+  "packageManager": "pnpm@10.11.1",
+  "devDependencies": {
+    "@nuxt/eslint": "^1.4.1",
+    "@types/node": "^22.15.29",
+    "@types/spark-md5": "^3.0.5",
+    "fetch-mock": "^12.5.2",
+    "husky": "^9.1.7",
+    "prettier": "^3.5.3",
+    "sass": "^1.89.1"
+  }
+}

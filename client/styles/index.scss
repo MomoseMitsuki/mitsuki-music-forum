@@ -1,0 +1,40 @@
+@use "sass:map";
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+// scss 变量控制主题切换
+$themes: (
+    light: (
+        bgColor: #fff,
+        textColor: #020618
+    ),
+    dark: (
+        bgColor: #020618,
+        textColor: #fff
+    )
+);
+$curThemeName: "";
+@mixin useTheme() {
+    @each $key, $value in $themes {
+        $curThemeName: $key !global;
+        html[data-theme="#{$key}"] & {
+            @content;
+        }
+    }
+}
+
+@function getVar($varName) {
+    // 当前主题的对应变量值
+    $themeMap: map.get($themes, $curThemeName);
+    @return map.get($themeMap, $varName);
+}
+
+/*
+transition: background-color 0.3s ease, color 0.3s ease;
+@include {
+    color:getVar('textColor');
+    background-color:getVar('bgColor');
+}
+*/
