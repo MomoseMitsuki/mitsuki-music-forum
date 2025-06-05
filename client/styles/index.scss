@@ -34,11 +34,11 @@ $curThemeName: "";
 
 /*
     You can use this method to generate different theme styles
-transition: background-color 0.3s ease, color 0.3s ease;
-@include {
-    color:getVar('textColor');
-    background-color:getVar('bgColor');
-}
+    transition: background-color 0.3s ease, color 0.3s ease;
+    @include {
+        color:getVar('textColor');
+        background-color:getVar('bgColor');
+    }
 */
 
 // The style of the global webpage slider
