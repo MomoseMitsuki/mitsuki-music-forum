@@ -4,7 +4,8 @@
     padding: 0;
     box-sizing: border-box;
 }
-// scss 变量控制主题切换
+
+// scss variable control theme switching
 $themes: (
     light: (
         bgColor: #fff,
@@ -26,15 +27,29 @@ $curThemeName: "";
 }
 
 @function getVar($varName) {
-    // 当前主题的对应变量值
+    // corresponding variable values for the current topic
     $themeMap: map.get($themes, $curThemeName);
     @return map.get($themeMap, $varName);
 }
 
 /*
+    You can use this method to generate different theme styles
 transition: background-color 0.3s ease, color 0.3s ease;
 @include {
     color:getVar('textColor');
     background-color:getVar('bgColor');
 }
 */
+
+// The style of the global webpage slider
+::-webkit-scrollbar {
+    width: 6px;
+    background-color: white;
+}
+::-webkit-scrollbar-thumb {
+    background-color: #eee;
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background-color: #ccc;
+}
