@@ -11,10 +11,10 @@ const SPEED = 28
  * we start the animation on el; otherwise, we pause the animation.
  */
 const changeScroll = (el: HTMLElement, binding: DirectiveBinding<string>) => {
-    if (binding.value === binding.oldValue) return
     const boxWidth = el.offsetWidth
     const fontWidth = parseFloat(window.getComputedStyle(el).fontSize)
-    const infoWidth = binding.value.length * fontWidth
+    el.innerHTML = binding.value
+    const infoWidth = el.scrollWidth
     const time = Math.round(((infoWidth + 2 * fontWidth) / SPEED) * 1000)
     const animation = el.animate(
         [
@@ -35,8 +35,6 @@ const changeScroll = (el: HTMLElement, binding: DirectiveBinding<string>) => {
     if (infoWidth > boxWidth) {
         el.innerHTML = `${binding.value}<span style="padding-right:2em;"></span>${binding.value}`
         animation.play()
-    } else {
-        el.innerHTML = binding.value
     }
 }
 
