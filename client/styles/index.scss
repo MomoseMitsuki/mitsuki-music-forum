@@ -9,11 +9,11 @@
 $themes: (
     light: (
         bgColor: #fff,
-        textColor: #020618
+        textColor: #2c2c2c
     ),
     dark: (
-        bgColor: #020618,
-        textColor: #fff
+        bgColor: #2c2c2c,
+        textColor: #ccc
     )
 );
 $curThemeName: "";
@@ -32,6 +32,20 @@ $curThemeName: "";
     @return map.get($themeMap, $varName);
 }
 
+%themeStyle {
+    @include useTheme {
+        color: getVar("textColor");
+        background-color: getVar("bgColor");
+    }
+}
+/*
+ * 你好
+ */
+%svgThemeStyle {
+    @include useTheme {
+        fill: getVar("textColor");
+    }
+}
 /*
     You can use this method to generate different theme styles
     transition: background-color 0.3s ease, color 0.3s ease;
