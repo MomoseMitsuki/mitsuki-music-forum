@@ -6,8 +6,8 @@ const SPEED = 28
  * @param {DirectiveBinding<string>} binding    The value bound in the vue marquee directive
  * @description
  * This function is used in Vue lifecycle hooks to mount a seamless scrolling animation on the element (el) using the Web Animations API.
- * It checks the length of the input string
- * if the length of the string multiplied by the font width exceeds the width of the el's box,
+ * It checks the width of the input string
+ * if the width of the string multiplied by the font width exceeds the width of the el's box,
  * we start the animation on el; otherwise, we pause the animation.
  */
 const changeScroll = (el: HTMLElement, binding: DirectiveBinding<string>) => {
