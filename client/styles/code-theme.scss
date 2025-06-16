@@ -1,21 +1,6 @@
 @use "sass:map";
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+@use "variables.scss" as *;
 
-// scss variable control theme switching
-$themes: (
-    light: (
-        bgColor: #fff,
-        textColor: #2c2c2c
-    ),
-    dark: (
-        bgColor: #2c2c2c,
-        textColor: #ccc
-    )
-);
 $curThemeName: "";
 @mixin useTheme() {
     @each $key, $value in $themes {
@@ -38,9 +23,7 @@ $curThemeName: "";
         background-color: getVar("bgColor");
     }
 }
-/*
- * 你好
- */
+
 %svgThemeStyle {
     @include useTheme {
         fill: getVar("textColor");
@@ -49,21 +32,8 @@ $curThemeName: "";
 /*
     You can use this method to generate different theme styles
     transition: background-color 0.3s ease, color 0.3s ease;
-    @include {
+    @include useTheme {
         color:getVar('textColor');
         background-color:getVar('bgColor');
     }
 */
-
-// The style of the global webpage slider
-::-webkit-scrollbar {
-    width: 6px;
-    background-color: white;
-}
-::-webkit-scrollbar-thumb {
-    background-color: #eee;
-    border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-    background-color: #ccc;
-}

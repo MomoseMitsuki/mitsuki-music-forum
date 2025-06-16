@@ -1,0 +1,16 @@
+$pinkColor: #f595bb;
+$redColor: #c70c0c;
+
+// scss variable control theme switching
+$themes: (
+    light: (
+        bgColor: #fff,
+        textColor: #2c2c2c,
+        fullBarColor: $pinkColor
+    ),
+    dark: (
+        bgColor: #2c2c2c,
+        textColor: #ccc,
+        fullBarColor: $redColor
+    )
+);
