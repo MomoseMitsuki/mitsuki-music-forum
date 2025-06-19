@@ -6,7 +6,7 @@ import emptyLoveSvg from "~/assets/icons/emptyLove.svg"
 import fullLoveSvg from "~/assets/icons/fullLove.svg"
 import music from "../assets/localtest/default.flac"
 const playSettingStore = usePlaySettingStore()
-const { isLoad,volume, playMode } = storeToRefs(playSettingStore)
+const { isLoad, volume, playMode } = storeToRefs(playSettingStore)
 // VO Views Object
 const views = reactive({
     infoName: "Fantastic Conflict",
@@ -83,7 +83,7 @@ const dragMusicBar = (e: MouseEvent) => {
 /**
  * @param {MouseEvent} e    push in a mouse event object.
  * @description
- * This is a volume progress bar event listener player that is triggered when the mouse enters. 
+ * This is a volume progress bar event listener player that is triggered when the mouse enters.
  * during this time, you can drag the progress bar to control the volume in real time.
  */
 const dragVolumeBar = (e: MouseEvent) => {
@@ -147,8 +147,6 @@ const showVolumeBar = () => {
     clearTimeout(_timer)
     isShowVolumeBar.value = true
 }
-
-
 </script>
 
 <template>
@@ -161,7 +159,8 @@ const showVolumeBar = () => {
         </div>
         <!-- music info -->
         <div class="controller__info">
-            <ClientOnly>            <!-- Q: 为什么 ClientOnly 包裹的元素在render函数重新执行的时候不会执行updated生命周期函数-->
+            <ClientOnly>
+                <!-- Q: 为什么 ClientOnly 包裹的元素在render函数重新执行的时候不会执行updated生命周期函数-->
                 <div class="info__name" v-marquee="views.infoName"></div>
                 <div class="info__singers" v-marquee="views.infoSinger"></div>
             </ClientOnly>
@@ -381,7 +380,6 @@ const showVolumeBar = () => {
 </template>
 
 <style scoped lang="scss">
-$controllerHeight: 75px;
 $iconMedLen: 40px;
 $iconMiniLen: 25px;
 %iconBase {
@@ -489,6 +487,7 @@ $iconMiniLen: 25px;
     }
     .controller__time {
         margin: 0 12px;
+        white-space: nowrap;
     }
     .controller__controlVolume {
         position: relative;
