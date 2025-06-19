@@ -13,11 +13,7 @@ const SPEED = 28
 const changeScroll = (el: HTMLElement, binding: DirectiveBinding<string>) => {
     const boxWidth = el.offsetWidth
     const fontWidth = parseFloat(window.getComputedStyle(el).fontSize)
-    while (el.firstChild) {
-        el.removeChild(el.firstChild)
-    }
-    const textNode = document.createTextNode(binding.value)
-    el.appendChild(textNode)
+    el.innerHTML = `${binding.value}`
     const infoWidth = el.scrollWidth
     const time = Math.round(((infoWidth + 2 * fontWidth) / SPEED) * 1000)
     const animation = el.animate(
@@ -37,11 +33,7 @@ const changeScroll = (el: HTMLElement, binding: DirectiveBinding<string>) => {
     )
     animation.pause()
     if (infoWidth > boxWidth) {
-        const spacer = document.createElement('span')
-        spacer.style.paddingRight = '2em'
-        const textNode2 = document.createTextNode(binding.value)
-        el.appendChild(spacer)
-        el.appendChild(textNode2)
+        el.innerHTML = `${binding.value}<span style="padding-right:2em;"></span>${binding.value}`
         animation.play()
     }
 }
