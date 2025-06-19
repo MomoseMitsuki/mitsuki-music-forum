@@ -4,13 +4,18 @@ $redColor: #c70c0c;
 // scss variable control theme switching
 $themes: (
     light: (
-        bgColor: #fff,
-        textColor: #2c2c2c,
-        fullBarColor: $pinkColor
+        bgColor: #ffffff80,
+        textColor: #1c1c1c,
+        fullBarColor: $pinkColor,
+        orgTextColor: #222
     ),
     dark: (
-        bgColor: #2c2c2c,
-        textColor: #ccc,
-        fullBarColor: $redColor
+        bgColor: #111111c0,
+        textColor: #cccccc,
+        fullBarColor: $redColor,
+        orgTextColor: #efefef
     )
 );
+
+$navHeight: 80px;
+$controllerHeight: 75px;
