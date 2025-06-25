@@ -11,30 +11,29 @@ const SPEED = 28
  * we start the animation on el; otherwise, we pause the animation.
  */
 const changeScroll = (el: HTMLElement, binding: DirectiveBinding<string>) => {
+    el.getAnimations().forEach(an => an.cancel())
+    el.innerHTML = `${binding.value}`
     const boxWidth = el.offsetWidth
     const fontWidth = parseFloat(window.getComputedStyle(el).fontSize)
-    el.innerHTML = `${binding.value}`
     const infoWidth = el.scrollWidth
     const time = Math.round(((infoWidth + 2 * fontWidth) / SPEED) * 1000)
-    const animation = el.animate(
-        [
-            {
-                transform: "translateX(0px)"
-            },
-            {
-                transform: `translateX(-${infoWidth + 2 * fontWidth}px)`
-            }
-        ],
-        {
-            duration: time,
-            easing: "linear",
-            iterations: Infinity
-        }
-    )
-    animation.pause()
     if (infoWidth > boxWidth) {
         el.innerHTML = `${binding.value}<span style="padding-right:2em;"></span>${binding.value}`
-        animation.play()
+        el.animate(
+            [
+                {
+                    transform: "translateX(0px)"
+                },
+                {
+                    transform: `translateX(-${infoWidth + 2 * fontWidth}px)`
+                }
+            ],
+            {
+                duration: time,
+                easing: "linear",
+                iterations: Infinity
+            }
+        )
     }
 }
 
