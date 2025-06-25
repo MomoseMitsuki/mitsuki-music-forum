@@ -29,6 +29,27 @@ $curThemeName: "";
         fill: getVar("textColor");
     }
 }
+
+%scrollThemeStyle {
+    &::-webkit-scrollbar {
+        width: 6px;
+        @include useTheme {
+            background-color: getVar("orgBgColor");
+        }
+    }
+    &::-webkit-scrollbar-thumb {
+        border-radius: 3px;
+        @include useTheme {
+            background-color: getVar("selectedColor");
+        }
+    }
+    &::-webkit-scrollbar-thumb:hover {
+        border-radius: 3px;
+        @include useTheme {
+            background-color: getVar("selectedColor");
+        }
+    }
+}
 /*
     You can use this method to generate different theme styles
     transition: background-color 0.3s ease, color 0.3s ease;
