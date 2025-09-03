@@ -1,7 +1,5 @@
 <script setup lang="ts"></script>
 
-<template>
-    <div>正在构思 首页 ...</div>
-</template>
+<template></template>
 
 <style scoped lang="scss"></style>

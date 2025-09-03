@@ -13,26 +13,20 @@ export default defineNuxtConfig({
                     entryFileNames: "js/[name].[hash].js",
                     chunkFileNames: "js/[name].[hash].js",
                     assetFileNames: (assetInfo) => {
-                        // 图片放 img
-                        if (
-                            /\.(png|jpe?g|gif|svg|webp)$/.test(
-                                assetInfo.name || ""
-                            )
-                        ) {
+                        const name = assetInfo.names[0]
+                        if (/\.(png|jpe?g|gif|svg|webp)$/.test(name || "")) {
                             return "img/[name].[hash][extname]"
                         }
-                        // CSS 放 css 文件夹
-                        if (/\.css$/.test(assetInfo.name || "")) {
+                        if (/\.css$/.test(name || "")) {
                             return "css/[name].[hash][extname]"
                         }
-                        // 其它默认放 assets/
                         return "assets/[name].[hash][extname]"
                     }
                 }
             }
         },
         esbuild: {
-            drop: ["debugger"]
+            drop: []
         },
         css: {
             preprocessorOptions: {
@@ -54,8 +48,11 @@ export default defineNuxtConfig({
     app: {
         head: {
             htmlAttrs: {
-                "data-theme": "light"
+                "data-theme": "dark"
             }
         }
+    },
+    runtimeConfig: {
+        apiTest: process.env.LOCALTEST
     }
 })

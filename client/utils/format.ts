@@ -80,3 +80,5 @@ export const formatLyric = (lyricStr: string) => {
     }
     return _deleteSpace(result)
 }
+
+export const formatSingers = (singers: Array<string>) => singers.join("、")

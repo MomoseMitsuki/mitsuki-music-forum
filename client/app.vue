@@ -1,16 +1,36 @@
 <script setup lang="ts">
-const a = 1
+import MusicController from "~/components/MusicController.vue"
+import ForumNav from "~/components/ForumNav.vue"
 </script>
 
 <template>
-    <div class="item">测试test</div>
+    <div class="main">
+        <ForumNav />
+        <NuxtPage />
+        <MusicController />
+    </div>
 </template>
 
-<style scoped lang="scss">
-.item {
-    @include useTheme {
-        background: getVar("bgColor");
-        color: getVar("textColor");
+<style lang="scss">
+.main {
+    @extend %scrollThemeStyle;
+    margin: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    &::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        filter: blur(20px);
+        z-index: -1;
+        @include useTheme {
+            background-image: getVar("main");
+        }
     }
 }
 </style>

@@ -11,7 +11,7 @@ const SPEED = 28
  * we start the animation on el; otherwise, we pause the animation.
  */
 const changeScroll = (el: HTMLElement, binding: DirectiveBinding<string>) => {
-    el.getAnimations().forEach(an => an.cancel())
+    el.getAnimations().forEach((an) => an.cancel())
     el.innerHTML = `${binding.value}`
     const boxWidth = el.offsetWidth
     const fontWidth = parseFloat(window.getComputedStyle(el).fontSize)

@@ -1,22 +1,27 @@
 <script setup lang="ts">
 import { storeToRefs } from "pinia"
 import { usePlaySettingStore } from "@/stores"
-import { formatTime } from "@/utils/format"
+import { formatTime, formatSingers } from "@/utils/format"
 import emptyLoveSvg from "~/assets/icons/emptyLove.svg"
 import fullLoveSvg from "~/assets/icons/fullLove.svg"
-import music from "../assets/localtest/default.flac"
 const playSettingStore = usePlaySettingStore()
-const { isLoad, volume, playMode } = storeToRefs(playSettingStore)
+const { isLoad, volume, playMode, currentPlayIndex, isPlay } =
+    storeToRefs(playSettingStore)
 // VO Views Object
 const views = reactive({
-    infoName: "Fantastic Conflict",
-    infoSinger: "小春めう",
+    infoName: playSettingStore.playList[currentPlayIndex.value].name,
+    infoSinger: formatSingers(
+        playSettingStore.playList[currentPlayIndex.value].singer
+    ),
+    avater: playSettingStore.playList[currentPlayIndex.value].avater,
     duration: 0,
     currentTime: 0
 })
 const isDrag = ref(false)
-const isPlay = ref(false)
 const isShowVolumeBar = ref(false)
+const isShowList = ref(false)
+const isShowLyric = ref(false)
+const isShowController = ref(false)
 let audio: HTMLAudioElement
 watch(
     () => volume.value,
@@ -26,10 +31,33 @@ watch(
         }
     }
 )
+watch(
+    () => currentPlayIndex.value,       // if the currentPlayIndex changed, we change the music
+    () => {
+        const { path, name, singer, avater } =
+            playSettingStore.playList[currentPlayIndex.value]
+        playSettingStore.audio.src = path
+        views.infoName = name
+        views.infoSinger = formatSingers(singer)
+        views.avater = avater
+        playSettingStore.audio.addEventListener('canplaythrough', () => {       // to make sure the audio has already loaded
+            playSettingStore.audio.play()
+        }, { once: true });
+    }
+)
+watch(
+    () => isShowController.value,
+    () => {
+        if (isShowController.value === true) return
+        isShowVolumeBar.value = false
+        isShowList.value = false
+        isShowLyric.value = false
+    }
+)
 onBeforeMount(() => {
     audio = new Audio()
     playSettingStore.audio = audio
-    audio.src = music
+    audio.src = playSettingStore.playList[currentPlayIndex.value].path
     audio.onloadedmetadata = () => {
         isLoad.value = true
         views.duration = audio.duration
@@ -40,6 +68,9 @@ onBeforeMount(() => {
             views.currentTime = audio.currentTime
         }
     }
+    audio.onended = endedMusic
+    audio.onplay = () => (isPlay.value = true)
+    audio.onpause = () => (isPlay.value = false)
 })
 
 /**
@@ -118,10 +149,10 @@ const dragVolumeBar = (e: MouseEvent) => {
 const togglePlay = () => {
     if (!isLoad.value) return
     if (audio.paused) {
-        audio.play()
+        playSettingStore.audio.play()
         isPlay.value = true
     } else {
-        audio.pause()
+        playSettingStore.audio.pause()
         isPlay.value = false
     }
 }
@@ -147,15 +178,85 @@ const showVolumeBar = () => {
     clearTimeout(_timer)
     isShowVolumeBar.value = true
 }
+
+const endedMusic = () => {
+    const len = playSettingStore.playList.length
+    if (len === 0) return
+    else if (len === 1) {
+        playSettingStore.audio.currentTime = 0
+        return
+    }
+    switch (playMode.value) {
+        case 0:
+            if (currentPlayIndex.value === len - 1) {
+                playSettingStore.audio.currentTime = 0
+            } else {
+                currentPlayIndex.value++
+            }
+            break
+        case 1:
+            const org = currentPlayIndex.value
+            while (org === currentPlayIndex.value) {
+                currentPlayIndex.value =
+                    Math.floor(Math.random() * (len - 1)) + 1
+            }
+            break
+        case 2:
+            if (currentPlayIndex.value === len - 1) {
+                currentPlayIndex.value = 0
+            } else {
+                currentPlayIndex.value++
+            }
+            break
+        case 3:
+            queueMicrotask(() => {
+                playSettingStore.audio.currentTime = 0
+                playSettingStore.audio.play()
+            })
+            break
+    }
+}
+
+const prevMusic = () => {
+    if (playMode.value === 3 || playMode.value === 1) {
+        endedMusic()
+        return
+    }
+    if (currentPlayIndex.value === 0) {
+        currentPlayIndex.value = playSettingStore.playList.length - 1
+    } else {
+        currentPlayIndex.value--
+    }
+}
 </script>
 
 <template>
-    <div class="controller__container">
-        <!-- audio visualization-->
-        <canvas class="controller__canvas"></canvas>
+    <div
+        class="controller__container"
+        :class="{ controller__container_disappear: !isShowController }"
+    >
+        <!-- show music controller-->
+        <div
+            class="controller__show"
+            @click="isShowController = !isShowController"
+        >
+            <svg
+                class="icon"
+                :class="{ controller__show_disappear: !isShowController }"
+                viewBox="0 0 1024 1024"
+                xmlns="http://www.w3.org/2000/svg"
+            >
+                <path
+                    d="M992.01127 607.7c-7.4 0-14.9-2.6-20.9-7.8l-417-360.8c-24-21-60.3-21-84.3 0l-0.1 0.1L52.91127 599.9c-13.4 11.6-33.6 10.1-45.1-3.3-11.6-13.4-10.1-33.6 3.3-45.1l416.7-360.6c23.3-20.4 53.2-31.6 84.2-31.6s60.9 11.2 84.2 31.6l416.7 360.6c13.4 11.6 14.8 31.8 3.3 45.1-6.3 7.4-15.2 11.1-24.2 11.1z"
+                ></path>
+                <path
+                    d="M992.01127 864.7c-7.4 0-14.9-2.6-20.9-7.8l-417-360.8c-24-21-60.3-21-84.3 0l-0.1 0.1L52.91127 856.9c-13.4 11.6-33.6 10.1-45.1-3.3-11.6-13.4-10.1-33.6 3.3-45.1l416.7-360.6c23.3-20.4 53.2-31.6 84.2-31.6s60.9 11.2 84.2 31.6l416.7 360.6c13.4 11.6 14.8 31.8 3.3 45.1-6.3 7.4-15.2 11.1-24.2 11.1z"
+                ></path>
+            </svg>
+        </div>
         <!-- music avater -->
         <div class="controller__avater-container">
-            <img src="../assets/localtest/default.png" />
+            <img :src="views.avater" />
         </div>
         <!-- music info -->
         <div class="controller__info">
@@ -170,6 +271,7 @@ const showVolumeBar = () => {
             class="medium-icon"
             viewBox="0 0 1024 1024"
             xmlns="http://www.w3.org/2000/svg"
+            @click="prevMusic"
         >
             <path
                 d="M512 40.96a471.04 471.04 0 1 0 471.04 471.04A471.04 471.04 0 0 0 512 40.96z m0 901.12a430.08 430.08 0 1 1 430.08-430.08 430.08 430.08 0 0 1-430.08 430.08z"
@@ -210,6 +312,7 @@ const showVolumeBar = () => {
         </svg>
         <!-- next music button -->
         <svg
+            @click="endedMusic"
             class="medium-icon"
             viewBox="0 0 1024 1024"
             xmlns="http://www.w3.org/2000/svg"
@@ -363,8 +466,14 @@ const showVolumeBar = () => {
             </div>
         </div>
         <!-- show music lyric -->
-        <div class="controller__lyric">词</div>
-        <div class="controller__playbackQueue">
+        <div class="controller__lyric" @click="isShowLyric = !isShowLyric">
+            词
+        </div>
+        <!-- show play list-->
+        <div
+            class="controller__playbackQueue"
+            @click="isShowList = !isShowList"
+        >
             <svg
                 class="mini-icon"
                 viewBox="0 0 1200 1200"
@@ -376,21 +485,17 @@ const showVolumeBar = () => {
             </svg>
         </div>
     </div>
-    <MusicLyric />
+    <MusicLyric
+        style="transition: transform 0.5s ease"
+        :class="{ lyric__containner_leave: !isShowLyric }"
+    />
+    <PlayList v-if="isShowList" />
 </template>
 
 <style scoped lang="scss">
 $iconMedLen: 40px;
 $iconMiniLen: 25px;
-%iconBase {
-    @extend %svgThemeStyle;
-    cursor: pointer;
-    margin: 0 7px;
-    transition: transform 0.3s ease;
-    &:hover {
-        transform: scale(1.1);
-    }
-}
+
 .mini-icon {
     @extend %iconBase;
     width: $iconMiniLen;
@@ -414,26 +519,50 @@ $iconMiniLen: 25px;
     width: 100%;
     height: $controllerHeight;
     border-radius: 8px;
-    border: 2px solid #ccc;
-    //    transform: translateY($controllerHeight);
+    border: 2px solid #aaa;
     cursor: default;
     user-select: none;
-    .controller__canvas {
+    transition: transform 0.5s ease;
+    &.controller__container_disappear {
+        transform: translateY($controllerHeight);
+    }
+    .controller__show {
+        @include useTheme {
+            background-color: getVar("bgColor");
+        }
         position: absolute;
-        z-index: -1;
-        bottom: 0;
-        width: 100%;
-        height: $controllerHeight;
+        top: -11px;
+        width: 50px;
+        height: 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        .icon {
+            @include useTheme {
+                fill: getVar("textColor");
+            }
+            display: block;
+            width: 12px;
+            height: 12px;
+            margin: 0 auto 7px auto;
+            transition: transform 0.25s linear;
+            transform: rotateZ(180deg);
+            &.controller__show_disappear {
+                transform: rotateZ(0);
+            }
+        }
     }
     .controller__avater-container {
+        position: relative;
         width: 50px;
         height: 50px;
         margin: 0 25px;
         border-radius: 3px;
+        overflow: hidden;
         img {
             width: inherit;
             height: inherit;
             border-radius: inherit;
+            object-fit: cover;
         }
     }
     .controller__info {
@@ -494,6 +623,9 @@ $iconMiniLen: 25px;
         margin: 6px 8px 0 8px;
         .controller__volumeBar {
             @extend %themeStyle;
+            @include useTheme {
+                background-color: getVar("orgBgColor");
+            }
             position: absolute;
             bottom: 42px;
             z-index: 16;
@@ -501,7 +633,7 @@ $iconMiniLen: 25px;
             height: 180px;
             border: 1px #ccc solid;
             border-radius: 8px;
-            box-shadow: 0 0 12px 2px #ccc;
+            box-shadow: 0 0 12px 2px #1c1c1c;
             text-align: center;
             .volumeBar__bar {
                 width: 8px;
@@ -549,5 +681,8 @@ $iconMiniLen: 25px;
     .controller__playbackQueue {
         margin: 10px 8px 0 8px;
     }
+}
+.lyric__containner_leave {
+    transform: translateY(100%);
 }
 </style>

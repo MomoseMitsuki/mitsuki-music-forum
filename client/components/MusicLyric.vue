@@ -1,17 +1,37 @@
 <script setup lang="ts">
 import { type ShallowRef } from "vue"
-import lyricData from "~/assets/localtest/default.lrc?raw"
 import { formatLyric } from "@/utils/format"
 import { usePlaySettingStore } from "@/stores"
 const playSettingStore = usePlaySettingStore()
+const { currentPlayIndex, isPlay } = storeToRefs(playSettingStore)
 const views = reactive({
-    infoName: "Fantastic Conflict",
-    infoSinger: "小春めう"
+    infoName: playSettingStore.playList[currentPlayIndex.value].name,
+    infoSinger: formatSingers(
+        playSettingStore.playList[currentPlayIndex.value].singer
+    ),
+    avater: playSettingStore.playList[currentPlayIndex.value].avater
 })
-const lyric = reactive(formatLyric(lyricData))
+const getLyricService = async (id: number) => {
+    if (playSettingStore.playList[id-1].lyric) {
+        const res = await fetch(`/localtest/lyric/${id}.lrc`)
+        const data = await res.text()
+        isLyric.value = true
+        return data
+    } else {
+        isLyric.value = false
+    }
+    return ""
+}
+const lyric = ref<{ time: number; words: string }[]>([
+    {
+        time: 0,
+        words: ""
+    }
+])
 const currentLyricIndex = ref(-1)
 const offset = ref(0)
 const isInit = ref(false)
+const isLyric = ref(true)
 let containerHeight: number
 let liHeight: number
 let maxOffset: number
@@ -25,8 +45,29 @@ const cvs = useTemplateRef("canvasRef") as Readonly<
     ShallowRef<HTMLCanvasElement>
 >
 let ctx: CanvasRenderingContext2D
-
+watch(
+    () => currentPlayIndex.value,
+    async () => {
+        const { name, singer, avater } =
+            playSettingStore.playList[currentPlayIndex.value]
+        const data = await getLyricService(
+            playSettingStore.playList[currentPlayIndex.value].id
+        )
+        views.infoName = name
+        views.infoSinger = formatSingers(singer)
+        views.avater = avater
+        document.documentElement.style.setProperty("--bg-img", `url(${avater})`)
+        if (isLyric.value)  lyric.value = formatLyric(data)
+    }
+)
 onMounted(() => {
+    getLyricService(playSettingStore.playList[currentPlayIndex.value].id).then(
+        (res) => {lyric.value = formatLyric(res)}
+    )
+    document.documentElement.style.setProperty(
+        "--bg-img",
+        `url(${playSettingStore.playList[currentPlayIndex.value].avater})`
+    )
     // calculate the container size for the lyrics section
     // and the maximum offset for the lyrics
     containerHeight = containner.value.clientHeight
@@ -34,19 +75,17 @@ onMounted(() => {
     maxOffset = ul.value.clientHeight - containerHeight
     // during music playback, constantly calculate the offset
     // and highlight the corresponding subscripts of the lyrics
-    playSettingStore.audio.addEventListener("timeupdate", () => {
-        setOffset()
-        currentLyricIndex.value = findIndex()
-    })
+    playSettingStore.audio.addEventListener("timeupdate", setOffset)
     setOffset()
     ctx = cvs.value.getContext("2d") as CanvasRenderingContext2D
     initCvs()
     playSettingStore.audio.onplay = () => {
+        isPlay.value = true
         if (isInit.value) return
         const audCtx = new AudioContext()
         const source = audCtx.createMediaElementSource(playSettingStore.audio)
         analyser = audCtx.createAnalyser()
-        analyser.fftSize = 2048
+        analyser.fftSize = 1024
         dataArray = new Uint8Array(analyser.frequencyBinCount)
         source.connect(analyser)
         analyser.connect(audCtx.destination)
@@ -60,20 +99,23 @@ onMounted(() => {
  */
 const findIndex = () => {
     const curTime = playSettingStore.audio.currentTime
-    for (let i = 0; i < lyric.length; i++) {
-        if (curTime < lyric[i].time) {
+    for (let i = 0; i < lyric.value.length; i++) {
+        if (curTime < lyric.value[i].time) {
             return i - 1
         }
     }
-    return lyric.length - 1
+    return lyric.value.length - 1
 }
 /**
  * @description
  * adjust the offset of lyrics display based on audio progress
  */
 const setOffset = () => {
-    let index = findIndex()
-    offset.value = liHeight * index + liHeight / 2 - containerHeight / 2
+    if(!isLyric.value) return
+    currentLyricIndex.value = findIndex()
+    offset.value =
+        liHeight * currentLyricIndex.value + liHeight / 2 - containerHeight / 2
+    maxOffset = ul.value.clientHeight - containerHeight
     if (offset.value < 0) {
         offset.value = 0
     }
@@ -100,13 +142,13 @@ const initCvs = () => {
  */
 const cvsDraw = () => {
     requestAnimationFrame(cvsDraw)
+    if (!isInit.value) return
     const { width, height } = cvs.value
     // clear canvas
     ctx.save()
     ctx.setTransform(1, 0, 0, 1, 0, 0)
     ctx.clearRect(0, 0, width, height)
     ctx.restore()
-    if (!isInit.value) return
     // change the color of the visualization through the theme
     const theme = document.documentElement.getAttribute("data-theme")
     if (theme === "light") {
@@ -119,7 +161,7 @@ const cvsDraw = () => {
     // for aesthetic reasons, we only visualize half of its data
     const len = dataArray.length / 2
     const barWidth = (Math.PI * 2 * 175) / len
-    const maxHeight = (height - 350) / 3
+    const maxHeight = (height - 350) / 2.5
     for (let i = 0; i < len; i++) {
         const data = dataArray[i]
         const angle = (1 / len) * Math.PI * 2
@@ -142,10 +184,7 @@ const cvsDraw = () => {
                     ></canvas>
                     <!-- music__avatar -->
                     <div class="info__musicAvatar">
-                        <img
-                            src="../assets/localtest/default.png"
-                            class="musicAvater__image"
-                        />
+                        <img :src="views.avater" class="musicAvater__image" />
                     </div>
                 </div>
                 <div class="info__containner">
@@ -165,7 +204,7 @@ const cvsDraw = () => {
             </div>
             <div class="lyric__info" ref="containnerRef">
                 <!-- music__lyric -->
-                <ul :style="`transform:translateY(-${offset}px)`" ref="ulRef">
+                <ul :style="`transform:translateY(-${offset}px)`" ref="ulRef" v-if="isLyric">
                     <li
                         v-for="(item, index) in lyric"
                         :class="{
@@ -175,6 +214,9 @@ const cvsDraw = () => {
                         {{ item.words }}
                     </li>
                 </ul>
+                <div class="nolyric__info" v-else>
+                    还没有歌词哦
+                </div>
             </div>
         </div>
     </div>
@@ -182,12 +224,12 @@ const cvsDraw = () => {
 
 <style scoped lang="scss">
 .lryic__background {
-    @extend %themeStyle;
     @include useTheme {
         color: getVar("orgTextColor");
+        background-color: getVar("orgBgColor");
     }
     position: fixed;
-    z-index: 11;
+    z-index: 12;
     top: $navHeight;
     left: 0;
     right: 0;
@@ -197,20 +239,23 @@ const cvsDraw = () => {
     &::before {
         content: "";
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-image: url("@/assets/localtest/default.png");
+        inset: 0;
+        background-image: var(--bg-img);
         background-size: cover;
         background-position: center;
         filter: blur(100px);
-        z-index: 10;
+        z-index: 11;
     }
     .lryic__containner {
         display: flex;
+        justify-content: center;
         align-items: center;
         position: absolute;
+        inset: 0;
+        padding-bottom: calc($controllerHeight * 1.5);
+        @include useTheme {
+            background-color: getVar("lightBgColor");
+        }
         z-index: 12;
         .containner__info {
             width: 598px;
@@ -246,7 +291,9 @@ const cvsDraw = () => {
                         height: 350px;
                         margin: 124px;
                         border-radius: 175px;
+                        border: 8px solid transparent;
                         animation: spin 25s linear infinite;
+                        object-fit: cover;
                         @keyframes spin {
                             from {
                                 transform: rotate(0deg);
@@ -264,22 +311,23 @@ const cvsDraw = () => {
                 overflow: hidden;
                 white-space: nowrap;
                 .info__name {
+                    font-family: "等线";
                     font-size: 40px;
                     font-weight: bold;
                 }
                 .info__singers {
+                    font-family: "黑体";
                     font-size: 25px;
                     margin: 20px 0;
                 }
             }
         }
         .lyric__info {
-            margin: 95px 0 0 50px;
+            margin: 95px 0 50px 80px;
             width: 50vw;
-            height: 65vh;
+            height: 598px;
             white-space: nowrap;
             overflow: hidden;
-            padding-left: 20px;
             mask-image: linear-gradient(
                 to bottom,
                 transparent,
@@ -287,6 +335,16 @@ const cvsDraw = () => {
                 black 85%,
                 transparent
             );
+            .nolyric__info {
+                margin-left: 100px;
+                width: 50vw;
+                line-height: 598px;
+                height:598px;
+                font-size:30px;
+                font-weight: bold;
+                letter-spacing: 2px;
+                color: getVar("fullBarColor");
+            }
             ul {
                 transition: transform 0.3s ease;
                 list-style: none;

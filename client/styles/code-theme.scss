@@ -30,6 +30,16 @@ $curThemeName: "";
     }
 }
 
+%iconBase {
+    @extend %svgThemeStyle;
+    cursor: pointer;
+    margin: 0 7px;
+    transition: transform 0.3s ease;
+    &:hover {
+        transform: scale(1.1);
+    }
+}
+
 %scrollThemeStyle {
     &::-webkit-scrollbar {
         width: 6px;
