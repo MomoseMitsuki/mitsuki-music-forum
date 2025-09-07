@@ -11,8 +11,9 @@ const views = reactive({
     ),
     avater: playSettingStore.playList[currentPlayIndex.value].avater
 })
-const getLyricService = async (id: number) => {
-    if (playSettingStore.playList[id-1].lyric) {
+const getLyricService = async (index: number) => {
+    const id = playSettingStore.playList[index].id
+    if (playSettingStore.playList[index].lyric) {
         const res = await fetch(`/localtest/lyric/${id}.lrc`)
         const data = await res.text()
         isLyric.value = true
@@ -47,12 +48,14 @@ const cvs = useTemplateRef("canvasRef") as Readonly<
 let ctx: CanvasRenderingContext2D
 watch(
     () => currentPlayIndex.value,
-    async () => {
+    async (newValue,oldValue) => {
+        if(newValue === -1){
+            currentPlayIndex.value = oldValue
+        }
+        if(playSettingStore.playList[currentPlayIndex.value].name === views.infoName)  return
         const { name, singer, avater } =
             playSettingStore.playList[currentPlayIndex.value]
-        const data = await getLyricService(
-            playSettingStore.playList[currentPlayIndex.value].id
-        )
+        const data = await getLyricService(currentPlayIndex.value)
         views.infoName = name
         views.infoSinger = formatSingers(singer)
         views.avater = avater
@@ -61,7 +64,7 @@ watch(
     }
 )
 onMounted(() => {
-    getLyricService(playSettingStore.playList[currentPlayIndex.value].id).then(
+    getLyricService(currentPlayIndex.value).then(
         (res) => {lyric.value = formatLyric(res)}
     )
     document.documentElement.style.setProperty(

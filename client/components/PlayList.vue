@@ -35,7 +35,12 @@ const playVideo = ($event:Event,index:number) => {
 }
 const deleteAMusic = ($event:Event,index:number) => {
     $event.stopPropagation()
-    playSettingStore.playList.slice(index,1)
+    playSettingStore.playList.splice(index,1)
+    if(currentPlayIndex.value > index){
+        currentPlayIndex.value--
+    } else if(currentPlayIndex.value === index){
+        currentPlayIndex.value = -1
+    }
 }
 </script>
 

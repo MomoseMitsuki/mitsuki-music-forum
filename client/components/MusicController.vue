@@ -31,9 +31,14 @@ watch(
         }
     }
 )
+
 watch(
     () => currentPlayIndex.value,       // if the currentPlayIndex changed, we change the music
-    () => {
+    (newValue,oldValue) => {
+        if(newValue === -1){
+            currentPlayIndex.value = oldValue
+        }
+        if(playSettingStore.playList[currentPlayIndex.value].name === views.infoName)  return
         const { path, name, singer, avater } =
             playSettingStore.playList[currentPlayIndex.value]
         playSettingStore.audio.src = path
