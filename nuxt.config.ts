@@ -2,10 +2,10 @@
 export default defineNuxtConfig({
     compatibilityDate: "2025-06-03",
     devtools: { enabled: false },
-    srcDir: "client/",
     nitro: {
         preset: "node-server"
     },
+    srcDir:"./",
     vite: {
         build: {
             rollupOptions: {
@@ -47,6 +47,7 @@ export default defineNuxtConfig({
     modules: ["@pinia/nuxt", "@nuxt/eslint"],
     app: {
         head: {
+            title:'望月演绎厅 —— 基于nuxt开发的ACG音乐论坛',
             htmlAttrs: {
                 "data-theme": "dark"
             }

@@ -168,7 +168,7 @@ export const usePlaySettingStore = defineStore("playSettingStore", () => {
     const isRenderList = ref(false)
     const isPlay = ref(false)
     const currentPlayIndex = ref(0)
-    const currentVideoIndex = ref(5)
+    const currentVideoId = ref(5)
     const getPlayList = async () => {
         if (isRenderList.value) return
         const res = await fetch("/localtest/localtest.json")
@@ -187,6 +187,6 @@ export const usePlaySettingStore = defineStore("playSettingStore", () => {
         isRenderList,
         getPlayList,
         currentPlayIndex,
-        currentVideoIndex
+        currentVideoId
     }
 })

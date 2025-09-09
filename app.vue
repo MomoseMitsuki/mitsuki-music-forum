@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import MusicController from "~/components/MusicController.vue"
 import ForumNav from "~/components/ForumNav.vue"
+import { getPlayListService } from "~/apis/user"
+getPlayListService()
 </script>
 
 <template>

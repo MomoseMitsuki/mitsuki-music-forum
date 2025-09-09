@@ -2,9 +2,9 @@
 import { type ShallowRef } from 'vue'
 import { formatSingers } from "@/utils/format"
 const playSettingStore = usePlaySettingStore()
-const { isPlay,currentVideoIndex,playList } = storeToRefs(playSettingStore)
+const { isPlay,currentVideoId,playList } = storeToRefs(playSettingStore)
 const path = computed(() => {
-    return `/localtest/video/${currentVideoIndex.value}.mp4`
+    return `/localtest/video/${currentVideoId.value}.mp4`
 })
 const video = useTemplateRef("videoRef") as Readonly<ShallowRef<HTMLVideoElement>>
 const stopVideo = () => {
@@ -34,15 +34,15 @@ onMounted(() => {
             ref="videoRef"
             class="containner__video">
         </video>
-        <div class="video__info">{{ playList[currentVideoIndex - 1].name }} - {{ formatSingers(playList[currentVideoIndex - 1].singer) }}</div>
-        <div class="video__singer">歌手: {{ formatSingers(playList[currentVideoIndex - 1].singer) }}</div>
+        <div class="video__info">{{ playList[currentVideoId - 1].name }} - {{ formatSingers(playList[currentVideoId - 1].singer) }}</div>
+        <div class="video__singer">歌手: {{ formatSingers(playList[currentVideoId - 1].singer) }}</div>
     </div>
 </template>
 
 <style scoped lang="scss">
 .video__containner {
     @extend %themeStyle;
-    margin:20px auto 80px auto;
+    margin:$navHeight+30px auto 80px auto;
     padding:80px 140px;
     width: 1280px;
     height: auto;

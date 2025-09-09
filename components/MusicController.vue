@@ -563,6 +563,7 @@ $iconMiniLen: 25px;
         margin: 0 25px;
         border-radius: 3px;
         overflow: hidden;
+        background-color: inherit;
         img {
             width: inherit;
             height: inherit;

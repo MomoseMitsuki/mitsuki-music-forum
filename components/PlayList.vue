@@ -4,7 +4,7 @@ import { formatSingers, formatTime } from "#imports"
 import { type Music } from "@/types/index"
 const playSettingStore = usePlaySettingStore()
 const router = useRouter()
-const { currentPlayIndex,currentVideoIndex } = storeToRefs(playSettingStore)
+const { currentPlayIndex,currentVideoId } = storeToRefs(playSettingStore)
 const currentHoverIndex = ref(-1)
 const isShowSearch = ref(false)
 const searchName = ref("")
@@ -28,9 +28,9 @@ const playMusic = (index:number) => {
         currentPlayIndex.value = index
     }
 }
-const playVideo = ($event:Event,index:number) => {
+const playVideo = ($event:Event,id:number) => {
     $event.stopPropagation()
-    currentVideoIndex.value = index
+    currentVideoId.value = id
     router.push("/video")
 }
 const deleteAMusic = ($event:Event,index:number) => {
