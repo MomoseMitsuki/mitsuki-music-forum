@@ -143,7 +143,6 @@ const testData: Music[] = [
         video: true
     },
 ]
-
 export const usePlaySettingStore = defineStore("playSettingStore", () => {
     // audio setting, In order to manipulate the audio element in other components, we have to place it inside pinia
     let audio: HTMLAudioElement = {} as HTMLAudioElement
@@ -164,17 +163,11 @@ export const usePlaySettingStore = defineStore("playSettingStore", () => {
         }
     }
     // playList setting
-    let playList = reactive(testData)
+    const playList = reactive(testData)
     const isRenderList = ref(false)
     const isPlay = ref(false)
     const currentPlayIndex = ref(0)
     const currentVideoId = ref(5)
-    const getPlayList = async () => {
-        if (isRenderList.value) return
-        const res = await fetch("/localtest/localtest.json")
-        const data = await res.json()
-        return data
-    }
     return {
         audio,
         isLoad,
@@ -185,7 +178,6 @@ export const usePlaySettingStore = defineStore("playSettingStore", () => {
         playList,
         isPlay,
         isRenderList,
-        getPlayList,
         currentPlayIndex,
         currentVideoId
     }

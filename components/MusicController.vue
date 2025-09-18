@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { storeToRefs } from "pinia"
-import { usePlaySettingStore } from "@/stores"
+import { usePlaySettingStore,useUiStatusStore } from "@/stores"
 import { formatTime, formatSingers } from "@/utils/format"
 import emptyLoveSvg from "~/assets/icons/emptyLove.svg"
 import fullLoveSvg from "~/assets/icons/fullLove.svg"
 const playSettingStore = usePlaySettingStore()
+const uiStatusStore = useUiStatusStore()
 const { isLoad, volume, playMode, currentPlayIndex, isPlay } =
     storeToRefs(playSettingStore)
+const { isShowLyric } = storeToRefs(uiStatusStore)
 // VO Views Object
 const views = reactive({
     infoName: playSettingStore.playList[currentPlayIndex.value].name,
@@ -20,7 +22,6 @@ const views = reactive({
 const isDrag = ref(false)
 const isShowVolumeBar = ref(false)
 const isShowList = ref(false)
-const isShowLyric = ref(false)
 const isShowController = ref(false)
 let audio: HTMLAudioElement
 watch(
@@ -494,7 +495,9 @@ const prevMusic = () => {
         style="transition: transform 0.5s ease"
         :class="{ lyric__containner_leave: !isShowLyric }"
     />
-    <PlayList v-if="isShowList" />
+    <PlayList 
+        v-if="isShowList"
+    />
 </template>
 
 <style scoped lang="scss">

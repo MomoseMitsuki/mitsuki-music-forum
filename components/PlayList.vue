@@ -3,8 +3,10 @@ import { usePlaySettingStore } from "~/stores/index"
 import { formatSingers, formatTime } from "#imports"
 import { type Music } from "@/types/index"
 const playSettingStore = usePlaySettingStore()
+const uiStatusStore = useUiStatusStore()
 const router = useRouter()
 const { currentPlayIndex,currentVideoId } = storeToRefs(playSettingStore)
+const { isShowLyric } = storeToRefs(uiStatusStore)
 const currentHoverIndex = ref(-1)
 const isShowSearch = ref(false)
 const searchName = ref("")
@@ -32,6 +34,7 @@ const playVideo = ($event:Event,id:number) => {
     $event.stopPropagation()
     currentVideoId.value = id
     router.push("/video")
+    isShowLyric.value = false
 }
 const deleteAMusic = ($event:Event,index:number) => {
     $event.stopPropagation()
@@ -161,6 +164,8 @@ $infoHeight: 30px;
     @extend %themeStyle;
     @include useTheme {
         background-color: getVar("orgBgColor");
+        border:1px solid getVar("selectedColor");
+        box-shadow: 0 3px 5px 5px getVar("lightBgColor");
     }
     position: fixed;
     z-index: 12;

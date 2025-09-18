@@ -1,8 +1,8 @@
-import { setupFetchMock } from '~/mock/index'
 import fetchMock from "fetch-mock"
 export default defineNuxtPlugin(() => {
     console.log("初始化fetch mock")
-    fetchMock.get("http://localhost:3000/api/user/playlist",(url) => {
+    fetchMock.get("/api/user/playlist",(url) => {
+        console.log("被mock所拦截")
         console.log(url)
         return {
             code:200,

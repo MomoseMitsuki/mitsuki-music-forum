@@ -1,15 +1,15 @@
 $pinkColor: #f595bb;
 $redColor: #c70c0c;
-
+$yellowColor:#F5F2E9;
 // scss variable control theme switching
 $themes: (
     light: (
-        bgColor: #eeeeee80,
+        bgColor: $yellowColor,
         textColor: #1c1c1c,
         fullBarColor: $pinkColor,
         orgTextColor: #222,
-        orgBgColor: #efefef,
-        selectedColor: #ccc,
+        orgBgColor: $yellowColor,
+        selectedColor: #E4E1D8,
         lightBgColor: #eeeeee40,
         main:url("~/assets/background/main_light.png")
     ),
