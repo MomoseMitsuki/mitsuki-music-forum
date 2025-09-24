@@ -39,7 +39,6 @@ export function createFetchRequestor(opts: FetchRequestorOptions = {}): Requesto
 
 function buildUrl(base: string | undefined, u: string, params?: Record<string, any>): string {
     const root = base || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost')
-    console.log(root,u)
     const url = new URL(u, root);
     if (params) {
         Object.entries(params).forEach(([k, v]) => {
