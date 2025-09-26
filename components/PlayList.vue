@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { usePlaySettingStore } from "~/stores/index"
+import { usePlaySettingStore,useUserStore } from "~/stores/index"
 import { formatSingers, formatTime } from "#imports"
 import { type Music } from "@/types/index"
 const playSettingStore = usePlaySettingStore()
 const uiStatusStore = useUiStatusStore()
+const userStore = useUserStore()
 const router = useRouter()
 const { currentPlayIndex,currentVideoId } = storeToRefs(playSettingStore)
 const { isShowLyric } = storeToRefs(uiStatusStore)
@@ -43,6 +44,14 @@ const deleteAMusic = ($event:Event,index:number) => {
         currentPlayIndex.value--
     } else if(currentPlayIndex.value === index){
         currentPlayIndex.value = -1
+    }
+}
+const addToList = (item:Music,ListName:string) => {
+    for(const list of userStore.userLists){
+        if(list.name == ListName){
+            list.datas.push(item)
+            return
+        }
     }
 }
 </script>
@@ -106,7 +115,7 @@ const deleteAMusic = ($event:Event,index:number) => {
                 <img :src="item.avater" class="playList__avater" />
                 <div 
                     class="playList__info"
-                    :style="currentHoverIndex === index ? {width: '120px'} : {}"
+                    :style="currentHoverIndex === index ? {width: '80px'} : {}"
                 >
                     <div class="info__name">{{ item.name }}</div>
                     <div class="info__singer">
@@ -139,6 +148,10 @@ const deleteAMusic = ($event:Event,index:number) => {
                         xmlns="http://www.w3.org/2000/svg"
                     >
                         <path d="M515.38944 957.85984c-21.54496 0-36.87424-14.25408-40.76544-18.26816-17.62304-17.3568-347.25888-342.23104-392.43776-391.168C29.44 495.70816 0 424.6528 0 349.0816s29.44-146.62656 82.8928-200.06912c53.42208-53.43232 124.47744-82.87232 200.07936-82.87232 75.56096 0 146.60608 29.42976 200.05888 82.87232 11.90912 11.91936 22.7328 24.94464 32.3584 38.95296 9.6256-14.01856 20.44928-27.0336 32.34816-38.95296 53.44256-53.44256 124.49792-82.87232 200.07936-82.87232 75.56096 0 146.61632 29.42976 200.07936 82.87232 53.43232 53.46304 82.86208 124.50816 82.86208 200.06912 0 75.5712-29.42976 146.61632-82.86208 200.07936-44.50304 48.20992-374.23104 373.18656-391.74144 390.44096C552.28416 943.60576 536.9344 957.85984 515.38944 957.85984zM282.97216 117.34016c-61.92128 0-120.1152 24.10496-163.87072 67.87072C75.3152 228.98688 51.2 287.19104 51.2 349.0816c0 61.9008 24.1152 120.10496 67.8912 163.88096 45.33248 49.05984 388.28032 387.0208 391.7312 390.42048 0.256 0.24576 0.512 0.512 0.74752 0.768 0.82944 0.78848 2.72384 2.02752 3.81952 2.42688 1.10592-0.39936 3.05152-1.67936 4.16768-2.77504 3.86048-3.81952 346.79808-341.78048 391.43424-390.11328 44.47232-44.52352 68.56704-102.71744 68.56704-164.608s-24.10496-120.08448-67.87072-163.86048c-43.76576-43.76576-101.96992-67.87072-163.87072-67.87072s-120.10496 24.10496-163.88096 67.87072c-18.46272 18.4832-33.75104 40.32512-45.42464 64.9216-4.23936 8.92928-13.24032 14.63296-23.13216 14.63296l0 0c-9.89184 0-18.8928-5.70368-23.13216-14.63296-11.66336-24.576-26.94144-46.42816-45.44512-64.9216C403.0464 141.44512 344.86272 117.34016 282.97216 117.34016z"></path>
+                    </svg>
+                    <!-- 添加到我的列表 -->
+                    <svg class="mini-icon" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M544.256 480.256h307.2a32.256 32.256 0 0 1 0 64h-307.2v307.2a32.256 32.256 0 0 1-64 0v-307.2h-307.2a32.256 32.256 0 1 1 0-64h307.2v-307.2a32.256 32.256 0 1 1 64 0z"></path>
                     </svg>
                     <!-- 播放视频 -->
                     <svg
@@ -264,7 +277,7 @@ $infoHeight: 30px;
                 flex-direction: row-reverse;
                 align-items: center;
                 justify-content: flex-end;
-                width: 120px;
+                width: 150px;
                 .mini-icon {
                     @extend %iconBase;
                     margin:0 8.5px;
