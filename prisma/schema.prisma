@@ -1,0 +1,63 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String      @id @default(auto()) @map("_id") @db.ObjectId
+  email    String
+  name     String      @unique
+  avater   String
+  password String
+  Lists    MusicList[] @relation(fields: [ListIds], references: [id])
+  ListIds  String[]    @db.ObjectId
+}
+
+model Music {
+  id       String      @id @default(auto()) @map("_id") @db.ObjectId
+  name     String
+  singer   String[]
+  path     String      @unique
+  duration Int
+  avater   String
+  video    Video?
+  lyric    Lyric?
+  Lists    MusicList[] @relation(fields: [ListIds], references: [id])
+  ListIds  String[]    @db.ObjectId
+}
+
+model MusicList {
+  id       String   @id @default(auto()) @map("_id") @db.ObjectId
+  name     String
+  avater   String?
+  type     String // offical   user
+  Musics   Music[]  @relation(fields: [MusicIds], references: [id])
+  MusicIds String[] @db.ObjectId
+  Users    User[]   @relation(fields: [UserIds], references: [id])
+  UserIds  String[] @db.ObjectId
+}
+
+model Video {
+  id      String @id @default(auto()) @map("_id") @db.ObjectId
+  avater  String
+  url     String @unique
+  Music   Music  @relation(fields: [MusicId], references: [id])
+  MusicId String @unique @db.ObjectId
+}
+
+model Lyric {
+  id      String @id @default(auto()) @map("_id") @db.ObjectId
+  url     String @unique
+  Music   Music  @relation(fields: [MusicId], references: [id])
+  MusicId String @unique @db.ObjectId
+}

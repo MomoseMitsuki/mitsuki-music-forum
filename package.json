@@ -1,6 +1,6 @@
 {
   "name": "nuxt-music-player",
-  "version": "0.0.33",
+  "version": "0.0.34",
   "private": true,
   "$schema": "https://json.schemastore.org/package.json",
   "scripts": {
@@ -16,18 +16,17 @@
     "precommit": "node ./.husky/scripts/updateVersion.js && git add package.json",
     "prisma:generate": "pnpm prisma generate",
     "prisma:push": "prisma db push",
-    "prisma:sync": "prisma:push && prisma:generate",
+    "prisma:sync": "pnpm prisma:push && pnpm prisma:generate",
     "prisma:pull": "prisma db pull",
     "prisma:studio": "prisma studio"
   },
   "dependencies": {
     "@pinia/nuxt": "^0.11.0",
-    "@prisma/client": "^6.16.2",
+    "@prisma/client": "^6.17.0",
     "@prisma/extension-accelerate": "^2.0.2",
     "axios": "^1.12.2",
     "nuxt": "^3.17.5",
     "pinia": "^3.0.2",
-    "prisma": "^6.16.2",
     "spark-md5": "^3.0.2",
     "vue": "^3.5.16",
     "vue-router": "^4.5.1"
@@ -40,6 +39,7 @@
     "@types/spark-md5": "^3.0.5",
     "husky": "^9.1.7",
     "prettier": "^3.5.3",
+    "prisma": "^6.17.0",
     "sass": "^1.89.1"
   }
 }
