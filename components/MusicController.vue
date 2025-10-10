@@ -19,11 +19,13 @@ const views = reactive({
     duration: 0,
     currentTime: 0
 })
+
 const isDrag = ref(false)
 const isShowVolumeBar = ref(false)
 const isShowList = ref(false)
 const isShowController = ref(false)
 let audio: HTMLAudioElement
+const listBtn = useTemplateRef("listBtn")
 watch(
     () => volume.value,
     () => {
@@ -34,11 +36,8 @@ watch(
 )
 
 watch(
-    () => currentPlayIndex.value,       // if the currentPlayIndex changed, we change the music
-    (newValue,oldValue) => {
-        if(newValue === -1){
-            currentPlayIndex.value = oldValue
-        }
+    () => playSettingStore.playList[currentPlayIndex.value].id,       // if the id changed, we change the music
+    () => {
         if(playSettingStore.playList[currentPlayIndex.value].name === views.infoName)  return
         const { path, name, singer, avater } =
             playSettingStore.playList[currentPlayIndex.value]
@@ -78,7 +77,10 @@ onBeforeMount(() => {
     audio.onplay = () => (isPlay.value = true)
     audio.onpause = () => (isPlay.value = false)
 })
-
+onMounted(() => {
+    // get the playList Button's position
+    uiStatusStore.listEle = listBtn.value as HTMLDivElement
+})
 /**
  * @param {MouseEvent} e    push in a mouse event object.
  * @description
@@ -234,6 +236,7 @@ const prevMusic = () => {
         currentPlayIndex.value--
     }
 }
+
 </script>
 
 <template>
@@ -479,6 +482,7 @@ const prevMusic = () => {
         <div
             class="controller__playbackQueue"
             @click="isShowList = !isShowList"
+            ref="listBtn"
         >
             <svg
                 class="mini-icon"
@@ -503,7 +507,6 @@ const prevMusic = () => {
 <style scoped lang="scss">
 $iconMedLen: 40px;
 $iconMiniLen: 25px;
-
 .mini-icon {
     @extend %iconBase;
     width: $iconMiniLen;

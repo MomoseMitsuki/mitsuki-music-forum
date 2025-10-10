@@ -31,7 +31,7 @@ const playMusic = (index:number) => {
         currentPlayIndex.value = index
     }
 }
-const playVideo = ($event:Event,id:number) => {
+const playVideo = ($event:Event,id:string) => {
     $event.stopPropagation()
     currentVideoId.value = id
     router.push("/video")
@@ -42,8 +42,6 @@ const deleteAMusic = ($event:Event,index:number) => {
     playSettingStore.playList.splice(index,1)
     if(currentPlayIndex.value > index){
         currentPlayIndex.value--
-    } else if(currentPlayIndex.value === index){
-        currentPlayIndex.value = -1
     }
 }
 const addToList = (item:Music,ListName:string) => {

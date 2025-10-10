@@ -2,6 +2,7 @@
 import { type ShallowRef } from "vue"
 import { formatLyric } from "@/utils/format"
 import { usePlaySettingStore } from "@/stores"
+console.log("lyric setup执行")
 const playSettingStore = usePlaySettingStore()
 const { currentPlayIndex, isPlay } = storeToRefs(playSettingStore)
 const views = reactive({
@@ -12,9 +13,9 @@ const views = reactive({
     avater: playSettingStore.playList[currentPlayIndex.value].avater
 })
 const getLyricService = async (index: number) => {
-    const id = playSettingStore.playList[index].id
+    const lyric = playSettingStore.playList[index].lyric
     if (playSettingStore.playList[index].lyric) {
-        const res = await fetch(`/localtest/lyric/${id}.lrc`)
+        const res = await fetch(lyric)
         const data = await res.text()
         isLyric.value = true
         return data
@@ -33,11 +34,14 @@ const currentLyricIndex = ref(-1)
 const offset = ref(0)
 const isInit = ref(false)
 const isLyric = ref(true)
+const RAFId = ref<number>()
 let containerHeight: number
 let liHeight: number
 let maxOffset: number
 let dataArray: Uint8Array<ArrayBuffer>
 let analyser: AnalyserNode
+let source: MediaElementAudioSourceNode
+let audCtx: AudioContext
 const containner = useTemplateRef("containnerRef") as Readonly<
     ShallowRef<HTMLDivElement>
 >
@@ -46,12 +50,8 @@ const cvs = useTemplateRef("canvasRef") as Readonly<
     ShallowRef<HTMLCanvasElement>
 >
 let ctx: CanvasRenderingContext2D
-watch(
-    () => currentPlayIndex.value,
-    async (newValue,oldValue) => {
-        if(newValue === -1){
-            currentPlayIndex.value = oldValue
-        }
+watch(() => playSettingStore.playList[currentPlayIndex.value].id,
+    async () => {
         if(playSettingStore.playList[currentPlayIndex.value].name === views.infoName)  return
         const { name, singer, avater } =
             playSettingStore.playList[currentPlayIndex.value]
@@ -63,6 +63,19 @@ watch(
         if (isLyric.value)  lyric.value = formatLyric(data)
     }
 )
+
+const analyseAudio = () => {
+    isPlay.value = true
+    if (isInit.value) return
+    audCtx = new AudioContext()
+    source = audCtx.createMediaElementSource(playSettingStore.audio)
+    analyser = audCtx.createAnalyser()
+    analyser.fftSize = 1024
+    dataArray = new Uint8Array(analyser.frequencyBinCount)
+    source.connect(analyser)
+    analyser.connect(audCtx.destination)
+    isInit.value = true
+}
 onMounted(() => {
     getLyricService(currentPlayIndex.value).then(
         (res) => {lyric.value = formatLyric(res)}
@@ -82,23 +95,34 @@ onMounted(() => {
     setOffset()
     ctx = cvs.value.getContext("2d") as CanvasRenderingContext2D
     initCvs()
-    playSettingStore.audio.onplay = () => {
-        isPlay.value = true
-        if (isInit.value) return
-        const audCtx = new AudioContext()
-        const source = audCtx.createMediaElementSource(playSettingStore.audio)
-        analyser = audCtx.createAnalyser()
-        analyser.fftSize = 1024
-        dataArray = new Uint8Array(analyser.frequencyBinCount)
-        source.connect(analyser)
-        analyser.connect(audCtx.destination)
-        isInit.value = true
-    }
+    playSettingStore.audio.addEventListener("play",analyseAudio)
     cvsDraw()
+})
+onBeforeUnmount(() => {
+    if(RAFId.value !== void 0){
+        cancelAnimationFrame(RAFId.value)
+    }
+    if (isInit.value) {
+        if (source) {
+            source.disconnect(); // 断开音频源
+            source = null as any
+        }
+        if (analyser) {
+            analyser.disconnect(); // 断开分析器
+            analyser = null as any
+        }
+        if (audCtx) {
+            audCtx.close(); // 关闭音频上下文，释放资源
+            audCtx = null as any
+        }
+        isInit.value = false;
+    }
+    playSettingStore.audio.removeEventListener("timeupdate", setOffset)
+    playSettingStore.audio.removeEventListener("play",analyseAudio)
 })
 /**
  * @description
- *
+ *  find the lyric's index by time
  */
 const findIndex = () => {
     const curTime = playSettingStore.audio.currentTime
@@ -132,6 +156,10 @@ const setOffset = () => {
  * and redefine the coordinate system
  */
 const initCvs = () => {
+    if(!cvs.value){
+        console.log("没有获取到canvas")
+        return
+    }
     const width = cvs.value.clientWidth
     cvs.value.width = cvs.value.clientWidth
     cvs.value.height = cvs.value.clientWidth
@@ -144,7 +172,7 @@ const initCvs = () => {
  * and then visualize the analysis data of the analyzer node
  */
 const cvsDraw = () => {
-    requestAnimationFrame(cvsDraw)
+    RAFId.value = requestAnimationFrame(cvsDraw)
     if (!isInit.value) return
     const { width, height } = cvs.value
     // clear canvas
@@ -346,9 +374,12 @@ const cvsDraw = () => {
                 font-size:30px;
                 font-weight: bold;
                 letter-spacing: 2px;
-                color: getVar("fullBarColor");
+                @include useTheme {
+                    color: getVar("fullBarColor");
+                }
             }
             ul {
+                will-change: transform;
                 transition: transform 0.3s ease;
                 list-style: none;
                 li {
