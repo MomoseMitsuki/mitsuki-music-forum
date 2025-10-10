@@ -1,6 +1,6 @@
 {
   "name": "nuxt-music-player",
-  "version": "0.0.37",
+  "version": "0.0.38",
   "private": true,
   "$schema": "https://json.schemastore.org/package.json",
   "scripts": {
