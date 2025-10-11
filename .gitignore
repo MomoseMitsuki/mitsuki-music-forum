@@ -24,6 +24,7 @@ logs
 !.env.example
 
 # 静态资源文件
+public
 *.flac
 *.lrc
 *.png
