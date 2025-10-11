@@ -1,3 +1,4 @@
+import type { DBMusic, DBMusicList, DBUser } from "@/types"
 /**
  * @interface the object type of a lyric data
  */
@@ -82,3 +83,67 @@ export const formatLyric = (lyricStr: string) => {
 }
 
 export const formatSingers = (singers: Array<string>) => singers.join("、")
+
+export const formatUser = (user:DBUser) => {
+    let $default,$love
+    const defaultIdx = user.Lists.findIndex(list => list.name === "$default")
+    const loveIdx = user.Lists.findIndex(list => list.name === "$love")
+    $default = formatList(user.Lists[defaultIdx])
+    $love = formatList(user.Lists[loveIdx])
+    user.Lists.splice(defaultIdx,1)
+    user.Lists.splice(loveIdx,1)
+    const result = {
+        id: user.id,
+        avater: user.avater,
+        email: user.email,
+        name: user.name,
+        $default,$love,
+        $list: user.Lists
+    }
+    return result
+}
+
+export const formatList = (list:DBMusicList) => {
+    const result = {
+        id: list.id,
+        name: list.name,
+        avater: list.avater,
+        datas: formatMusics(list.Musics)
+    }
+    return result
+}
+
+export const formatLists = (lists:Array<DBMusicList>) => {
+    const result = []
+    for(const list of lists) {
+        result.push(formatList(list))
+    }
+    return result
+}
+export const formatMusic = (music:DBMusic) => {
+    const result = {
+        id: music.id,
+        name: music.name,
+        avater: music.avater,
+        singer: music.singer,
+        path: music.path,
+        duration: music.duration,
+        video: music.video ? {
+            id: music.video.id,
+            avater: music.video.avater,
+            url: music.video.url,
+            name: music.name,
+            singer: music.singer
+        } : void 0,
+        lyric: music.lyric ? music.lyric.url : void 0
+    }
+    return result
+}
+
+export const formatMusics = (musics:Array<DBMusic>) => {
+    const result = []
+    for(const music of musics) {
+        result.push(formatMusic(music))
+    }
+    return result
+}
