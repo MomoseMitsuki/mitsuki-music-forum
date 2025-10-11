@@ -87,10 +87,10 @@ export const formatSingers = (singers: Array<string>) => singers.join("、")
 export const formatUser = (user:DBUser) => {
     let $default,$love
     const defaultIdx = user.Lists.findIndex(list => list.name === "$default")
-    const loveIdx = user.Lists.findIndex(list => list.name === "$love")
     $default = formatList(user.Lists[defaultIdx])
-    $love = formatList(user.Lists[loveIdx])
     user.Lists.splice(defaultIdx,1)
+    const loveIdx = user.Lists.findIndex(list => list.name === "$love")
+    $love = formatList(user.Lists[loveIdx])
     user.Lists.splice(loveIdx,1)
     const result = {
         id: user.id,
@@ -98,7 +98,7 @@ export const formatUser = (user:DBUser) => {
         email: user.email,
         name: user.name,
         $default,$love,
-        $list: user.Lists
+        $list: formatLists(user.Lists)
     }
     return result
 }
