@@ -1,14 +1,16 @@
 import { defineStore } from "pinia"
+import type { MusicList } from "~/types"
 
 export const useUserStore = defineStore("userStore", () => {
-    const userInfo = reactive({
-        uid: 0,
-        name: "",
-        exp: 0,
-        avatar: ""
-    })
-
+    const user = {
+        id:'',
+        avater: '',
+        email: '',
+        name: '未登录',
+    }
+    const $lists = reactive<Array<MusicList>>([])
     return {
-        userInfo
+        user,
+        $lists
     }
 })
