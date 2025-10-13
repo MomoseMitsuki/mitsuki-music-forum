@@ -1,9 +1,10 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
     compatibilityDate: "2025-06-03",
+    modules: ["@pinia/nuxt", "@nuxt/eslint"],
     devtools: { enabled: false },
     nitro: {
-        preset: "node-server"
+        preset: "node-server",
     },
     srcDir:"./",
     vite: {
@@ -23,7 +24,7 @@ export default defineNuxtConfig({
                         return "assets/[name].[hash][extname]"
                     }
                 }
-            }
+            },
         },
         esbuild: {
             drop: []
@@ -32,9 +33,9 @@ export default defineNuxtConfig({
             preprocessorOptions: {
                 scss: {
                     additionalData: `
-                        @use "@/styles/global.scss" as *;
                         @use "@/styles/variables.scss" as *;
                         @use "@/styles/code-theme.scss" as *;
+                        @use "@/styles/global.scss" as *;
                     `
                 }
             }
@@ -44,10 +45,9 @@ export default defineNuxtConfig({
         host: "127.0.0.1",
         port: 3000
     },
-    modules: ["@pinia/nuxt", "@nuxt/eslint"],
     app: {
         head: {
-            title:'望月演绎厅 —— 基于nuxt开发的ACG音乐论坛',
+            title:'🌺☘『 望月演绎厅 』🍂❄️ —— 基于nuxt开发的ACG音乐论坛',
             htmlAttrs: {
                 "data-theme": "dark"
             }
