@@ -1,20 +1,36 @@
 import { PrismaClient } from "@prisma/client"
+import { AddOneMusicToListRequest } from "@/types"
+import { formatLists } from "~/utils/format"
 const prisma = new PrismaClient()
 
-export const initUserList = async () => {
-    const defaultList = await prisma.musicList.create({
-        data: {
-            name: "$default",
-            type: "user"
-        }
+export const addOneMusicToListService = async (data:AddOneMusicToListRequest) => {
+    const { userId,musicId,name } = data
+    const list = await prisma.musicList.findFirst({
+        where: { name, type:"user", Users: { some: { id: userId } } },
+        select: { id: true, MusicIds: true }
     })
-    const loveList = await prisma.musicList.create({
-        data: {
-            name: "$love",
-            type: "user"
-        }
+    if (!list) {
+        return { message: "并没有此歌单" }
+    }
+    if (Array.isArray(list) && list.MusicIds.includes(musicId)) {
+        return { message: "该歌单内已有此歌曲"}
+    }
+    await prisma.musicList.update({
+        where: { id: list.id },
+        data: { MusicIds: { push: musicId } }
     })
-    const defaultId = defaultList.id
-    const loveListId = loveList.id
-    return { defaultId,loveListId }
+    return { message:"添加成功" }
+}
+
+export const getListsByNameService = async (contains:string) => {
+    const lists = await prisma.musicList.findMany({
+        where:{ name:{ contains, mode:"insensitive" }, type:"offical" },
+        include: { Musics: { include: { lyric: true,video: true } } }
+    })
+    const result = formatLists(lists)
+    return result
+}
+
+export const addOneMusicToOfficalListService = () => {
+
 }
