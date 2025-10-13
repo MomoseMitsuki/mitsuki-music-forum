@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { getUserInfoService } from '~/apis/user'
+import { addMusicService } from '~/apis/music'
+import { addOneMusicToListService } from '~/apis/list'
 const router = useRouter()
 const searchTypes = ["搜歌曲","搜歌单","搜MV"]
 const searchTypes_index = ref(0)
@@ -16,6 +19,18 @@ const changeTheme = () => {
         localStorage.setItem("theme","light")
     }
     isShowLightTheme.value = !isShowLightTheme.value
+}
+const data = {
+    userId: "68e8f3a670e1d7faa23026e5",
+    musicId: "68e8b11c1b31406973b8e7bb",
+    name: "$love"
+}
+const musicData = {
+    name: "星空鉄道ミルキーウェイ",
+    path: "/music/0000002D.mp3",
+    avater: "/avater/00000020.webp",
+    singer: ['保科めぐみ'],
+    duration: 95
 }
 </script>
 
@@ -47,7 +62,7 @@ const changeTheme = () => {
             百濑美月
         </div>
         <img 
-            src="/localtest/auth.jpg" 
+            src="/users/auth.jpg" 
             class="user__icon"
             @click="openUser"
         >
@@ -63,6 +78,7 @@ const changeTheme = () => {
         >
             <path d="M529.611373 1023.38565c-146.112965 0-270.826063-51.707812-374.344078-155.225827C51.74928 764.641808 0.041469 639.826318 0.041469 493.815745c0-105.053891 29.693595-202.326012 88.978393-292.22593 59.38719-89.797526 137.000103-155.942569 232.83874-198.63991 6.041111-4.607627 12.184613-3.788493 18.225724 2.252618 7.576986 4.607627 9.931996 11.365479 6.860244 20.580733C322.677735 83.736961 310.493122 142.202626 310.493122 201.589815c0 135.464227 48.328885 251.474031 144.986656 348.131801 96.657771 96.657771 212.667574 144.986656 348.131801 144.986656 74.541162 0 139.252721-11.365479 194.032283-34.19883C1003.684974 655.799424 1009.726084 656.618558 1015.767195 662.659669c7.576986 4.607627 9.931996 11.365479 6.860244 20.580733C983.104241 786.758417 918.802249 869.286132 829.721465 930.925939 740.743072 992.565746 640.706375 1023.38565 529.611373 1023.38565z"></path>
         </svg>
+        <div @click="addMusicService(musicData)">创建用户</div>
     </nav>
 </template>
 

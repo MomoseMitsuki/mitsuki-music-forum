@@ -2,19 +2,22 @@
 import { type ShallowRef } from "vue"
 import { formatLyric } from "@/utils/format"
 import { usePlaySettingStore } from "@/stores"
-console.log("lyric setup执行")
 const playSettingStore = usePlaySettingStore()
-const { currentPlayIndex, isPlay } = storeToRefs(playSettingStore)
+const { currentPlayIndex, isPlay, $default } = storeToRefs(playSettingStore)
 const views = reactive({
-    infoName: playSettingStore.playList[currentPlayIndex.value].name,
-    infoSinger: formatSingers(
-        playSettingStore.playList[currentPlayIndex.value].singer
+    infoName: $default.value.length === 0 ? "" : $default.value[currentPlayIndex.value].name,
+    infoSinger: $default.value.length === 0 ? "" : formatSingers(
+        $default.value[currentPlayIndex.value].singer
     ),
-    avater: playSettingStore.playList[currentPlayIndex.value].avater
+    avater: $default.value.length === 0 ? "" : $default.value[currentPlayIndex.value].avater
 })
 const getLyricService = async (index: number) => {
-    const lyric = playSettingStore.playList[index].lyric
-    if (playSettingStore.playList[index].lyric) {
+    if ($default.value.length === 0 || !$default.value[index].hasOwnProperty("lyric")) {
+        isLyric.value = false
+        return ""
+    }
+    const lyric = $default.value[index].lyric
+    if (lyric) {
         const res = await fetch(lyric)
         const data = await res.text()
         isLyric.value = true
@@ -50,11 +53,14 @@ const cvs = useTemplateRef("canvasRef") as Readonly<
     ShallowRef<HTMLCanvasElement>
 >
 let ctx: CanvasRenderingContext2D
-watch(() => playSettingStore.playList[currentPlayIndex.value].id,
+watch(() => {
+        if ($default.value.length === 0)    return
+        return $default.value[currentPlayIndex.value].id
+    },
     async () => {
-        if(playSettingStore.playList[currentPlayIndex.value].name === views.infoName)  return
+        if ($default.value.length === 0 || $default.value[currentPlayIndex.value].name === views.infoName)  return
         const { name, singer, avater } =
-            playSettingStore.playList[currentPlayIndex.value]
+        $default.value[currentPlayIndex.value]
         const data = await getLyricService(currentPlayIndex.value)
         views.infoName = name
         views.infoSinger = formatSingers(singer)
@@ -78,12 +84,17 @@ const analyseAudio = () => {
 }
 onMounted(() => {
     getLyricService(currentPlayIndex.value).then(
-        (res) => {lyric.value = formatLyric(res)}
+        (res) => {
+            if (res === "")  return
+            lyric.value = formatLyric(res)
+        }
     )
-    document.documentElement.style.setProperty(
+    if($default.value.length !== 0) {
+        document.documentElement.style.setProperty(
         "--bg-img",
-        `url(${playSettingStore.playList[currentPlayIndex.value].avater})`
+        `url(${$default.value[currentPlayIndex.value].avater})`
     )
+    }
     // calculate the container size for the lyrics section
     // and the maximum offset for the lyrics
     containerHeight = containner.value.clientHeight
@@ -157,7 +168,6 @@ const setOffset = () => {
  */
 const initCvs = () => {
     if(!cvs.value){
-        console.log("没有获取到canvas")
         return
     }
     const width = cvs.value.clientWidth
@@ -260,7 +270,7 @@ const cvsDraw = () => {
         background-color: getVar("orgBgColor");
     }
     position: fixed;
-    z-index: 12;
+    z-index: 112;
     top: $navHeight;
     left: 0;
     right: 0;
@@ -275,7 +285,7 @@ const cvsDraw = () => {
         background-size: cover;
         background-position: center;
         filter: blur(100px);
-        z-index: 11;
+        z-index: 111;
     }
     .lryic__containner {
         display: flex;
@@ -287,7 +297,7 @@ const cvsDraw = () => {
         @include useTheme {
             background-color: getVar("lightBgColor");
         }
-        z-index: 12;
+        z-index: 112;
         .containner__info {
             width: 598px;
             text-align: center;

@@ -1,20 +1,18 @@
 <script setup lang="ts">
 import { usePlaySettingStore,useUserStore } from "~/stores/index"
 import { formatSingers, formatTime } from "#imports"
-import { type Music } from "@/types/index"
+import type { Music } from "@/types/index"
+import emptyDefault from "@/assets/stickers/emptyDefault.webp"
 const playSettingStore = usePlaySettingStore()
-const uiStatusStore = useUiStatusStore()
-const userStore = useUserStore()
 const router = useRouter()
-const { currentPlayIndex,currentVideoId } = storeToRefs(playSettingStore)
-const { isShowLyric } = storeToRefs(uiStatusStore)
+const { currentPlayIndex,$default } = storeToRefs(playSettingStore)
 const currentHoverIndex = ref(-1)
 const isShowSearch = ref(false)
 const searchName = ref("")
 const searchMusic = (arr: Array<Music>) => {
     if (searchName.value === "") return arr
     const regx = new RegExp(searchName.value, "i")
-    const newArr = playSettingStore.playList.filter((item) => {
+    const newArr = $default.value.filter((item) => {
         if (regx.test(item.name)) return true
         for (const singer of item.singer) {
             if (regx.test(singer)) return true
@@ -33,32 +31,27 @@ const playMusic = (index:number) => {
 }
 const playVideo = ($event:Event,id:string) => {
     $event.stopPropagation()
-    currentVideoId.value = id
-    router.push("/video")
-    isShowLyric.value = false
+    router.push({
+        path:`/video/${id}`
+    })
 }
 const deleteAMusic = ($event:Event,index:number) => {
     $event.stopPropagation()
-    playSettingStore.playList.splice(index,1)
+    $default.value.splice(index,1)
     if(currentPlayIndex.value > index){
+        currentPlayIndex.value--
+    } else if (currentPlayIndex.value === $default.value.length && currentPlayIndex.value === index) {
         currentPlayIndex.value--
     }
 }
-const addToList = (item:Music,ListName:string) => {
-    for(const list of userStore.userLists){
-        if(list.name == ListName){
-            list.datas.push(item)
-            return
-        }
-    }
-}
+
 </script>
 
 <template>
     <div class="list__containner">
         <div class="list__title">播放队列</div>
         <div class="list__info">
-            <div>共{{ searchMusic(playSettingStore.playList).length }}首</div>
+            <div>共{{ searchMusic($default).length }}首</div>
             <div class="list__search_disappear" v-if="!isShowSearch"></div>
             <input
                 type="text"
@@ -83,7 +76,7 @@ const addToList = (item:Music,ListName:string) => {
                 ></path>
             </svg>
             <svg
-                @click="playSettingStore.playList = []"
+                @click="$default = []"
                 class="mini-icon"
                 viewBox="0 0 1150 1150"
                 xmlns="http://www.w3.org/2000/svg"
@@ -99,10 +92,10 @@ const addToList = (item:Music,ListName:string) => {
                 ></path>
             </svg>
         </div>
-        <div class="conntainner__playList">
+        <div class="conntainner__playList" v-if="$default.length !== 0">
             <div
                 class="playList__item"
-                v-for="(item, index) in searchMusic(playSettingStore.playList)"
+                v-for="(item, index) in searchMusic($default)"
                 @click="playMusic(index)"
                 @mouseover="currentHoverIndex = index"
                 @mouseleave="currentHoverIndex = -1"
@@ -153,7 +146,7 @@ const addToList = (item:Music,ListName:string) => {
                     </svg>
                     <!-- 播放视频 -->
                     <svg
-                        @click="playVideo($event,item.id)"
+                        @click="playVideo($event,item.video.id)"
                         v-if="item.video"
                         class="mini-icon" 
                         viewBox="0 0 1024 1024" 
@@ -164,6 +157,10 @@ const addToList = (item:Music,ListName:string) => {
                     <div v-else class="mini-icon"></div>
                 </div>
             </div>
+        </div>
+        <div class="emptyDefault" v-else>
+            <img :src="emptyDefault">
+            <div class="explain">还没有歌曲哦</div>
         </div>
     </div>
 </template>
@@ -179,7 +176,7 @@ $infoHeight: 30px;
         box-shadow: 0 3px 5px 5px getVar("lightBgColor");
     }
     position: fixed;
-    z-index: 12;
+    z-index: 112;
     right: 5px;
     bottom: $controllerHeight + 15px;
     width: 380px;
@@ -288,6 +285,24 @@ $infoHeight: 30px;
             @include useTheme {
                 background-color: getVar("selectedColor");
             }
+        }
+    }
+    .emptyDefault {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        height: 75%;
+        img {
+            display: block;
+            width: 38%;
+            aspect-ratio:1;
+        }
+        .explain {
+            margin:10px;
+            font-family: "等线";
+            font-size: 18px;
+            white-space: 2px;
         }
     }
 }

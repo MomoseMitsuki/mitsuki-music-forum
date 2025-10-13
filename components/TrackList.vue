@@ -1,50 +1,61 @@
 <script setup lang="ts">
-import { type Music } from "@/types"
-import { getPlayListService } from "@/apis/user"
+import type { Music } from "@/types"
+import { getPlayListService } from "~/apis/user"
 import { usePlaySettingStore } from "~/stores/index"
 const router = useRouter()
 const playSettingStore = usePlaySettingStore()
-const { currentPlayIndex,currentVideoId,playList } = storeToRefs(playSettingStore)
+const uiStatusStore = useUiStatusStore()
+const { currentPlayIndex,$default } = storeToRefs(playSettingStore)
 const prop = defineProps({
     type:String
 })
 const list = reactive<Array<Music>>([])
 getPlayListService().then((res) => {
-    for(let i = 0;i < res.data.length;i++){
-        list.push(res.data[i])
+    for(let i = 0;i < res.datas.length;i++){
+        list.push(res.datas[i])
     }
 })
-const playMusic = (e:Event,it:Music) => {
+const playMusic = function(e:MouseEvent,it:Music) {
     e.stopPropagation()
-    for(let i = 0;i < playList.value.length;i++){
-        if(playList.value[i].id === it.id){
+    uiStatusStore.jump(e)
+    for(let i = 0;i < $default .value.length;i++){
+        if($default.value[i].id === it.id){
             // todo: play the music
-            console.log("存在于歌曲中")
             currentPlayIndex.value = i
             return
         }
     }
     // add the playlist and play the music
-    playList.value.push(it)
-    currentPlayIndex.value = playList.value.length - 1
+    $default .value.push(it)
+    currentPlayIndex.value = $default.value.length - 1
 }
-const playVideo = ($event:Event,id:number) => {
+const playVideo = ($event:Event,id:string) => {
     $event.stopPropagation()
-    currentVideoId.value = id
-    router.push("/video")
+    router.push({
+        path:`/video/${id}`
+    })
 }
-const changePlayList = () => {
-    
+const changePlayList = ($event:MouseEvent) => {
+    if(list.length === 0)   return
+    uiStatusStore.jump($event)
+    $default.value.splice(0,$default.value.length)
+    for(const item of list){
+        $default.value.push(item)
+    }
+    currentPlayIndex.value = 0
+    playSettingStore.audio.currentTime = 0
+    playSettingStore.audio.play()
 }
+
 </script>
 
 <template>
     <div class="containner">
         <div class="tracklist__containner">
-        <img src="/localtest/trackList/default2.jpg" alt="专辑封面">
+        <img src="/trackList/default2.jpg" alt="专辑封面">
             <div class="info__containner">
                 {{ prop.type }}
-                <div class="play-btn">
+                <div class="play-btn" @click="changePlayList($event)">
                 <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
                     <path d="M897.143467 597.051733l-464.648534 311.5264c-46.976 31.488-110.592 18.944-142.08-28.023466A102.4 102.4 0 0 1 273.066667 823.5264V200.4736c0-56.5504 45.8496-102.4 102.4-102.4a102.4 102.4 0 0 1 57.028266 17.348267l464.64 311.5264c46.976 31.488 59.528533 95.104 28.032 142.08a102.4 102.4 0 0 1-28.023466 28.023466z"></path>
                 </svg>
@@ -70,7 +81,7 @@ const changePlayList = () => {
             <!-- 播放视频 -->
             <svg
                 v-if="item.video"
-                @click="playVideo($event,item.id)"
+                @click="playVideo($event,item.video.id)"
                 class="mini-icon" 
                 viewBox="0 0 1024 1024" 
                 xmlns="http://www.w3.org/2000/svg"
@@ -78,6 +89,9 @@ const changePlayList = () => {
                 <path d="M814.545455 186.181818h-230.4l121.018181-86.109091c11.636364-6.981818 13.963636-20.945455 4.654546-32.581818-6.981818-11.636364-20.945455-13.963636-32.581818-4.654545l-165.236364 116.363636-165.236364-116.363636c-11.636364-6.981818-25.6-4.654545-32.581818 4.654545-6.981818 11.636364-4.654545 25.6 4.654546 32.581818L439.854545 186.181818H209.454545c-76.8 0-139.636364 62.836364-139.636363 139.636364v477.090909c0 76.8 62.836364 139.636364 139.636363 139.636364h605.09091c76.8 0 139.636364-62.836364 139.636363-139.636364V325.818182c0-76.8-62.836364-139.636364-139.636363-139.636364z m93.090909 616.727273c0 51.2-41.890909 93.090909-93.090909 93.090909H209.454545c-51.2 0-93.090909-41.890909-93.090909-93.090909V325.818182c0-51.2 41.890909-93.090909 93.090909-93.090909h605.09091c51.2 0 93.090909 41.890909 93.090909 93.090909v477.090909z" fill="" p-id="6362"></path><path d="M686.545455 523.636364l-251.345455-144.290909c-6.981818-4.654545-16.290909-6.981818-23.272727-6.981819-23.272727 0-46.545455 18.618182-46.545455 46.545455v290.909091c0 27.927273 23.272727 46.545455 46.545455 46.545454 6.981818 0 16.290909-2.327273 23.272727-6.981818L686.545455 605.090909c30.254545-18.618182 30.254545-62.836364 0-81.454545z m-274.618182 186.181818V418.909091l251.345454 144.290909-251.345454 146.618182z"></path>
             </svg>
             <div v-else class="mini-icon"></div>
+            <svg class="mini-icon" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+                <path d="M544.256 480.256h307.2a32.256 32.256 0 0 1 0 64h-307.2v307.2a32.256 32.256 0 0 1-64 0v-307.2h-307.2a32.256 32.256 0 1 1 0-64h307.2v-307.2a32.256 32.256 0 1 1 64 0z"></path>
+            </svg>
             <!-- 删除单曲 -->
             <svg
                 v-if="prop.type !== '收藏歌曲'"
@@ -113,8 +127,9 @@ const changePlayList = () => {
             }
         }
         .info__containner {
-            font-size:22px;
+            font-size:25px;
             font-family: "等线";
+            font-weight: bold;
             padding-top:50px;
             .play-btn {
                 display: flex;
@@ -161,8 +176,8 @@ const changePlayList = () => {
             object-fit: cover;
         }
         .playlist__name {
-            margin:0 40px;
-            width: 125px;
+            margin:0 35px;
+            width: 120px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;

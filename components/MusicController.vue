@@ -2,20 +2,21 @@
 import { storeToRefs } from "pinia"
 import { usePlaySettingStore,useUiStatusStore } from "@/stores"
 import { formatTime, formatSingers } from "@/utils/format"
+import { debounce } from "@/utils/utils"
 import emptyLoveSvg from "~/assets/icons/emptyLove.svg"
 import fullLoveSvg from "~/assets/icons/fullLove.svg"
 const playSettingStore = usePlaySettingStore()
 const uiStatusStore = useUiStatusStore()
-const { isLoad, volume, playMode, currentPlayIndex, isPlay } =
+const { $default,$love,isLoad, volume, playMode, currentPlayIndex, isPlay } =
     storeToRefs(playSettingStore)
 const { isShowLyric } = storeToRefs(uiStatusStore)
 // VO Views Object
 const views = reactive({
-    infoName: playSettingStore.playList[currentPlayIndex.value].name,
-    infoSinger: formatSingers(
-        playSettingStore.playList[currentPlayIndex.value].singer
+    infoName: $default.value.length === 0 ? "--" : $default.value[currentPlayIndex.value].name,
+    infoSinger: $default.value.length === 0 ? "--" : formatSingers(
+        $default.value[currentPlayIndex.value].singer
     ),
-    avater: playSettingStore.playList[currentPlayIndex.value].avater,
+    avater: $default.value.length === 0 ? "" : $default.value[currentPlayIndex.value].avater,
     duration: 0,
     currentTime: 0
 })
@@ -36,18 +37,35 @@ watch(
 )
 
 watch(
-    () => playSettingStore.playList[currentPlayIndex.value].id,       // if the id changed, we change the music
     () => {
-        if(playSettingStore.playList[currentPlayIndex.value].name === views.infoName)  return
+        if ($default.value.length === 0)    return
+            return $default.value[currentPlayIndex.value].id
+        },       // if the id changed, we change the music
+    () => {
+        if ($default.value.length === 0) {
+            playSettingStore.audio.currentTime = 0
+            playSettingStore.audio.pause()
+            views.currentTime = 0
+            views.infoName = "--"
+            views.infoSinger = "--"
+            views.duration = 0
+            isShowLyric.value = false
+            return
+        }
+        if ($default.value[currentPlayIndex.value].name === views.infoName)  return
         const { path, name, singer, avater } =
-            playSettingStore.playList[currentPlayIndex.value]
-        playSettingStore.audio.src = path
+        $default.value[currentPlayIndex.value]
+        const checkMusic = debounce(() => {
+            playSettingStore.audio.src = path
+            playSettingStore.audio.currentTime = 0
+            playSettingStore.audio.addEventListener('canplaythrough', () => {       // to make sure the audio has already loaded
+                playSettingStore.audio.play()
+            }, { once: true });
+        })
+        checkMusic()
         views.infoName = name
         views.infoSinger = formatSingers(singer)
         views.avater = avater
-        playSettingStore.audio.addEventListener('canplaythrough', () => {       // to make sure the audio has already loaded
-            playSettingStore.audio.play()
-        }, { once: true });
     }
 )
 watch(
@@ -62,13 +80,16 @@ watch(
 onBeforeMount(() => {
     audio = new Audio()
     playSettingStore.audio = audio
-    audio.src = playSettingStore.playList[currentPlayIndex.value].path
+    $default.value.length === 0 ? "" : audio.src = $default.value[currentPlayIndex.value].path
     audio.onloadedmetadata = () => {
         isLoad.value = true
         views.duration = audio.duration
         audio.volume = volume.value
     }
     audio.ontimeupdate = () => {
+        if ($default.value.length === 0) {
+            views.currentTime = 0
+        }
         if (!isDrag.value) {
             views.currentTime = audio.currentTime
         }
@@ -90,7 +111,7 @@ onMounted(() => {
  * It calculates the relative percentage and assigns it to the variable currentTime.
  */
 const dragMusicBar = (e: MouseEvent) => {
-    if (!isLoad.value) return
+    if (!isLoad.value || $default.value.length === 0) return
     const ptr = document.createElement("style")
     ptr.innerHTML = `* {cursor:pointer !important;}`
     document.head.appendChild(ptr)
@@ -155,7 +176,7 @@ const dragVolumeBar = (e: MouseEvent) => {
  * If it is paused, play it; if it is playing, pause it. Also, update the isPlay state accordingly.
  */
 const togglePlay = () => {
-    if (!isLoad.value) return
+    if (!isLoad.value || $default.value.length === 0) return
     if (audio.paused) {
         playSettingStore.audio.play()
         isPlay.value = true
@@ -188,7 +209,7 @@ const showVolumeBar = () => {
 }
 
 const endedMusic = () => {
-    const len = playSettingStore.playList.length
+    const len = $default.value.length
     if (len === 0) return
     else if (len === 1) {
         playSettingStore.audio.currentTime = 0
@@ -231,7 +252,7 @@ const prevMusic = () => {
         return
     }
     if (currentPlayIndex.value === 0) {
-        currentPlayIndex.value = playSettingStore.playList.length - 1
+        currentPlayIndex.value = $default.value.length - 1
     } else {
         currentPlayIndex.value--
     }
@@ -265,7 +286,10 @@ const prevMusic = () => {
         </div>
         <!-- music avater -->
         <div class="controller__avater-container">
-            <img :src="views.avater" />
+            <img :src="views.avater" v-if="$default.length !== 0"/>
+            <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" v-else>
+                <path d="M945.96623 240.45909a511.920513 511.920513 0 0 0-867.951442 543.062838 511.920513 511.920513 0 0 0 867.951442-543.062838zM194.931976 825.697535s-30.133907-18.388802-64.18285-72.843383c-34.108261-54.454581-39.506264-92.952427-39.506264-92.952426l264.917382-100.129992s-0.771143 28.591621 10.202819 46.268598c11.033281 17.617658 36.658966 28.591621 36.658966 28.591621l-208.090053 191.065582z m369.85219-229.444791a99.358848 99.358848 0 1 1-105.409357-168.465151 99.358848 99.358848 0 0 1 105.409357 168.465151z m122.611785-125.10317s0.771143-28.650939-10.262138-46.327917c-11.0926-17.676977-36.599647-28.591621-36.599648-28.591621l208.030735-191.006263s30.193226 18.270164 64.242169 72.724745 39.446946 92.952427 39.446945 92.952427l-264.858063 100.248629z" fill="#707070" p-id="4868"></path><path d="M511.990509 511.96085m-34.820085 0a34.820086 34.820086 0 1 0 69.640171 0 34.820086 34.820086 0 1 0-69.640171 0Z"></path>
+            </svg>
         </div>
         <!-- music info -->
         <div class="controller__info">
@@ -338,7 +362,7 @@ const prevMusic = () => {
         </svg>
         <!-- isLove button -->
         <img
-            :src="0 ? emptyLoveSvg : fullLoveSvg"
+            :src="$default.length === 0 && $love.includes($default[currentPlayIndex]) ? emptyLoveSvg : fullLoveSvg"
             style="margin: 0 18px"
             class="mini-icon"
         />
@@ -347,7 +371,7 @@ const prevMusic = () => {
             <div
                 class="progress__full"
                 :style="{
-                    width: `${(views.currentTime / views.duration) * 100 + 14 / 6}%`
+                    width: `${(views.currentTime / (views.duration === 0 ? 1 : views.duration)) * 100 + 14 / 6}%`
                 }"
             >
                 <div class="progress__dot"></div>
@@ -475,7 +499,7 @@ const prevMusic = () => {
             </div>
         </div>
         <!-- show music lyric -->
-        <div class="controller__lyric" @click="isShowLyric = !isShowLyric">
+        <div class="controller__lyric" @click="() => { if($default.length !== 0) isShowLyric = !isShowLyric }">
             词
         </div>
         <!-- show play list-->
@@ -524,7 +548,7 @@ $iconMiniLen: 25px;
     align-items: center;
     justify-content: center;
     position: fixed;
-    z-index: 15;
+    z-index: 115;
     left: 0;
     bottom: 1px;
     width: 100%;
@@ -569,12 +593,19 @@ $iconMiniLen: 25px;
         margin: 0 25px;
         border-radius: 3px;
         overflow: hidden;
-        background-color: inherit;
         img {
             width: inherit;
             height: inherit;
             border-radius: inherit;
             object-fit: cover;
+        }
+        svg {
+            margin-top: 5px;
+            width: 40px;
+            height: 40px;
+            @include useTheme {
+                fill: getVar("textColor");
+            }
         }
     }
     .controller__info {
@@ -640,7 +671,7 @@ $iconMiniLen: 25px;
             }
             position: absolute;
             bottom: 42px;
-            z-index: 16;
+            z-index: 116;
             width: 45px;
             height: 180px;
             border: 1px #ccc solid;
