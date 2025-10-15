@@ -10,20 +10,20 @@ export interface Music {
 }
 
 export interface MusicList {
-    id:string,
-    avater: string,
-    name:string,
-    datas:Array<Music>
+    id: string
+    avater: string
+    name: string
+    datas: Array<Music>
 }
 
 export interface User {
-    id:string,
+    id: string
     avater: string
     email: string
-    name:string,
-    $default:MusicList,
-    $love:MusicList,
-    $list:Array<MusicList>
+    name: string
+    $default: MusicList
+    $love: MusicList
+    $list: Array<MusicList>
 }
 export interface Video {
     id: string

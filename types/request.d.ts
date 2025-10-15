@@ -4,8 +4,8 @@ export interface AddMusicRequest {
     singer: string[]
     duration: number
     avater: string
-    video?:AddVideoRequest
-    lyric?:AddLyricRequest
+    video?: AddVideoRequest
+    lyric?: AddLyricRequest
 }
 
 export interface AddVideoRequest {
