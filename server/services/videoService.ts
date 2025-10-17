@@ -1,7 +1,7 @@
-import { PrismaClient } from "@prisma/client"
-import { AddVideoRequest, DBMusic, RawMongodbData, RawMongodbMusicId } from "@/types"
+import { AddVideoRequest, DBMusic, RawMongodbData, RawMongodbMusicId,RawMongodbOnlyId } from "@/types"
 import { formatMusics } from "~/utils/format"
-const prisma = new PrismaClient()
+import prisma from '~/server/model'
+
 
 export const addVideoService = async (
     option: AddVideoRequest,
@@ -43,21 +43,20 @@ export const getVideoInfoService = async (page: number, limit: number) => {
             skip,
             take: limit
         })
-        const result: DBMusic[] = []
+        const musicIds: Array<string> = []
         for (const video of videos) {
-            const music = await tx.music.findFirst({
-                where: { id: video.MusicId },
-                include: { video: true, lyric: true }
-            })!
-            result.push(music as DBMusic)
+            musicIds.push(video.MusicId)
         }
+        const result = await tx.music.findMany({
+            where: { id: { in: musicIds } },
+            include: { video: true, lyric: true }
+        })!
         return formatMusics(result)
     })
     return result
 }
 
 export const getVideoRandomService = async (exclude:string,limit:number) => {
-    console.log(exclude)
     const result = await prisma.$transaction(async (tx) => {
         const videoIds = await tx.$runCommandRaw({
             aggregate: 'Video',
@@ -79,6 +78,44 @@ export const getVideoRandomService = async (exclude:string,limit:number) => {
             include: { video: true, lyric: true }
         })
         return formatMusics(musics)
+    })
+    return result
+}
+
+export const getVideoInfoByNameService = async (name:string) => {
+    const result = await prisma.$transaction(async (tx) => {
+        const names = await tx.music.findMany({
+            where: {
+                name: { contains:name, mode: "insensitive" }
+            },
+            select: { id: true }
+        })!
+        const singers = (await tx.$runCommandRaw({
+            find: "Music",
+            filter: {
+                singer: {
+                    $elemMatch: { $regex: `${name}`, $options: "i" }
+                }
+            },
+            projection: { _id: 1 }
+        })) as unknown as RawMongodbData<RawMongodbOnlyId>
+        const lists = await tx.musicList.findMany({
+            where: { name: { contains: name, mode: "insensitive" }, type: "offical" },
+            select: { Musics: { select: { id: true } } }
+        })
+        const ids = new Set<string>()
+        names.map((it) => ids.add(it.id))
+        singers.cursor.firstBatch.map((it) => ids.add(it._id.$oid))
+        lists.map((list) => list.Musics.map((it) => ids.add(it.id)))
+        const uniqueIds = [...ids]
+        const result = await tx.music.findMany({
+            where: { 
+                id: { in: uniqueIds },
+                video: { isNot: null }
+            },
+            include: { video: true, lyric: true },
+        })
+        return formatMusics(result)
     })
     return result
 }

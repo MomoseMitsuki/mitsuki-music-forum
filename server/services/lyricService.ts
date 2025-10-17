@@ -1,7 +1,6 @@
 import fs from "fs"
 import { AddLyricRequest } from "@/types"
-import { PrismaClient } from "@prisma/client"
-const prisma = new PrismaClient()
+import prisma from '~/server/model'
 
 export const getLryicService = async (id: string) => {
     const url = process.env.LYRIC_LOCALURL + id + ".lrc"

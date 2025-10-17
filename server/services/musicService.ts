@@ -1,10 +1,9 @@
 import type { AddMusicRequest, RawMongodbData, RawMongodbOnlyId } from "@/types"
-import { PrismaClient } from "@prisma/client"
 import { addLyricService } from "./lyricService"
 import { addVideoService } from "./videoService"
 import { formatMusics } from "~/utils/format"
-import { uniqueById } from "~/utils/utils"
-const prisma = new PrismaClient()
+import prisma from '~/server/model'
+
 
 export const getMusicByNameService = async (contains: string) => {
     const result = await prisma.$transaction(async (tx) => {

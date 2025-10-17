@@ -1,7 +1,7 @@
-import { PrismaClient } from "@prisma/client"
+import prisma from '~/server/model'
 import { AddOneMusicToListRequest } from "@/types"
 import { formatLists } from "~/utils/format"
-const prisma = new PrismaClient()
+
 
 export const addOneMusicToListService = async (
     data: AddOneMusicToListRequest

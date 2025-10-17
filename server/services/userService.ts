@@ -1,6 +1,5 @@
-import { PrismaClient } from "@prisma/client"
 import { formatUser } from "~/utils/format"
-const prisma = new PrismaClient()
+import prisma from '~/server/model'
 
 export const createUserService = async (
     name: string,
