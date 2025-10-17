@@ -29,3 +29,8 @@ export interface AddOneMusicToListRequest {
     musicId: string
     name: string
 }
+
+interface GetRandomVideoRequest {
+    limit: number
+    exclude: string
+}
