@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client"
-import { AddVideoRequest, DBMusic } from "@/types"
+import { AddVideoRequest, DBMusic, RawMongodbData, RawMongodbMusicId } from "@/types"
 import { formatMusics } from "~/utils/format"
 const prisma = new PrismaClient()
 
@@ -52,6 +52,33 @@ export const getVideoInfoService = async (page: number, limit: number) => {
             result.push(music as DBMusic)
         }
         return formatMusics(result)
+    })
+    return result
+}
+
+export const getVideoRandomService = async (exclude:string,limit:number) => {
+    console.log(exclude)
+    const result = await prisma.$transaction(async (tx) => {
+        const videoIds = await tx.$runCommandRaw({
+            aggregate: 'Video',
+            pipeline: [
+                { $sample: { size: limit + 1 } },
+                { $project: { MusicId: 1 } }
+            ],
+            cursor: {},
+        }) as unknown as RawMongodbData<RawMongodbMusicId>
+        const musicIds:Array<string> = []
+        let count = 0
+        videoIds.cursor.firstBatch.forEach(it => {
+            if (it._id.$oid === exclude || count === limit) return
+            musicIds.push(it.MusicId.$oid)
+            count++
+        })
+        const musics = await tx.music.findMany({
+            where: { id: { in: musicIds } },
+            include: { video: true, lyric: true }
+        })
+        return formatMusics(musics)
     })
     return result
 }
