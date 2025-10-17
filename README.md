@@ -1,7 +1,11 @@
 # 开发文档
 
-<img align="center" src="/.github/icon.png" weight="300" height="300">
-<div align="center" style="font-size: 30px;font-weight:bolder;">🌺☘『 望月演绎厅 』🍂❄️ —— 基于nuxt开发的ACG音乐论坛</div>
+<div align="center"><img src="/.github/icon.png" weight="300" height="300"></div>
+<h2 align="center"><strong>🌺☘『 望月演绎厅 』🍂❄️ —— 基于nuxt开发的ACG音乐论坛</strong></h2>
+
+
+
+
 
 # 关于网站
 
