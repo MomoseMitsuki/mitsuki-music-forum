@@ -1,4 +1,4 @@
-import type { AddMusicRequest, DBMusic } from "@/types"
+import type { AddMusicRequest, RawMongodbData, RawMongodbOnlyId } from "@/types"
 import { PrismaClient } from "@prisma/client"
 import { addLyricService } from "./lyricService"
 import { addVideoService } from "./videoService"
@@ -22,9 +22,7 @@ export const getMusicByNameService = async (contains: string) => {
                 }
             },
             projection: { _id: 1 }
-        })) as unknown as {
-            cursor: { firstBatch: Array<{ _id: { $oid: string } }> }
-        } // 这个类型太逆天了
+        })) as unknown as RawMongodbData<RawMongodbOnlyId>
         const lists = await tx.musicList.findMany({
             where: { name: { contains, mode: "insensitive" }, type: "offical" },
             select: { Musics: { select: { id: true } } }
