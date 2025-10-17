@@ -1,6 +1,6 @@
 {
   "name": "nuxt-music-player",
-  "version": "0.0.73",
+  "version": "0.0.74",
   "private": true,
   "$schema": "https://json.schemastore.org/package.json",
   "scripts": {
@@ -18,13 +18,13 @@
     "prisma:push": "prisma db push",
     "prisma:sync": "pnpm prisma:push && pnpm prisma:generate",
     "prisma:pull": "prisma db pull",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "prisma studio",
+    "start:mongodb": "mongod --config E:\\MongoDB\\mongod.cfg"
   },
   "dependencies": {
     "@pinia/nuxt": "^0.11.0",
     "@prisma/client": "^6.17.0",
     "@prisma/extension-accelerate": "^2.0.2",
-    "@vueuse/motion": "^3.0.3",
     "artplayer": "^5.3.0",
     "axios": "^1.12.2",
     "nuxt": "^3.17.5",

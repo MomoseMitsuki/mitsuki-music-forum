@@ -84,26 +84,27 @@ export const formatLyric = (lyricStr: string) => {
 
 export const formatSingers = (singers: Array<string>) => singers.join("、")
 
-export const formatUser = (user:DBUser) => {
-    let $default,$love
-    const defaultIdx = user.Lists.findIndex(list => list.name === "$default")
+export const formatUser = (user: DBUser) => {
+    let $default, $love
+    const defaultIdx = user.Lists.findIndex((list) => list.name === "$default")
     $default = formatList(user.Lists[defaultIdx])
-    user.Lists.splice(defaultIdx,1)
-    const loveIdx = user.Lists.findIndex(list => list.name === "$love")
+    user.Lists.splice(defaultIdx, 1)
+    const loveIdx = user.Lists.findIndex((list) => list.name === "$love")
     $love = formatList(user.Lists[loveIdx])
-    user.Lists.splice(loveIdx,1)
+    user.Lists.splice(loveIdx, 1)
     const result = {
         id: user.id,
         avater: user.avater,
         email: user.email,
         name: user.name,
-        $default,$love,
+        $default,
+        $love,
         $list: formatLists(user.Lists)
     }
     return result
 }
 
-export const formatList = (list:DBMusicList) => {
+export const formatList = (list: DBMusicList) => {
     const result = {
         id: list.id,
         name: list.name,
@@ -113,14 +114,14 @@ export const formatList = (list:DBMusicList) => {
     return result
 }
 
-export const formatLists = (lists:Array<DBMusicList>) => {
+export const formatLists = (lists: Array<DBMusicList>) => {
     const result = []
-    for(const list of lists) {
+    for (const list of lists) {
         result.push(formatList(list))
     }
     return result
 }
-export const formatMusic = (music:DBMusic) => {
+export const formatMusic = (music: DBMusic) => {
     const result = {
         id: music.id,
         name: music.name,
@@ -128,21 +129,23 @@ export const formatMusic = (music:DBMusic) => {
         singer: music.singer,
         path: music.path,
         duration: music.duration,
-        video: music.video ? {
-            id: music.video.id,
-            avater: music.video.avater,
-            url: music.video.url,
-            name: music.name,
-            singer: music.singer
-        } : void 0,
+        video: music.video
+            ? {
+                  id: music.video.id,
+                  avater: music.video.avater,
+                  url: music.video.url,
+                  name: music.name,
+                  singer: music.singer
+              }
+            : void 0,
         lyric: music.lyric ? music.lyric.url : void 0
     }
     return result
 }
 
-export const formatMusics = (musics:Array<DBMusic>) => {
+export const formatMusics = (musics: Array<DBMusic>) => {
     const result = []
-    for(const music of musics) {
+    for (const music of musics) {
         result.push(formatMusic(music))
     }
     return result

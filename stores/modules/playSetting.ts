@@ -1,5 +1,5 @@
 import { defineStore } from "pinia"
-import type { Music,MusicList } from "@/types"
+import type { Music, MusicList } from "@/types"
 
 export const usePlaySettingStore = defineStore("playSettingStore", () => {
     // audio setting, In order to manipulate the audio element in other components, we have to place it inside pinia
@@ -39,6 +39,6 @@ export const usePlaySettingStore = defineStore("playSettingStore", () => {
         $list,
         isPlay,
         isRenderList,
-        currentPlayIndex,
+        currentPlayIndex
     }
 })

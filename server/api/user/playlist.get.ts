@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
         }
     })
     const result = []
-    for(const music of musics) {
+    for (const music of musics) {
         const item = {
             id: music.id,
             name: music.name,

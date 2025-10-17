@@ -4,9 +4,9 @@ export default defineNuxtConfig({
     modules: ["@pinia/nuxt", "@nuxt/eslint"],
     devtools: { enabled: false },
     nitro: {
-        preset: "node-server",
+        preset: "node-server"
     },
-    srcDir:"./",
+    srcDir: "./",
     vite: {
         build: {
             rollupOptions: {
@@ -24,7 +24,7 @@ export default defineNuxtConfig({
                         return "assets/[name].[hash][extname]"
                     }
                 }
-            },
+            }
         },
         esbuild: {
             drop: []
@@ -47,13 +47,13 @@ export default defineNuxtConfig({
     },
     app: {
         head: {
-            title:'🌺☘『 望月演绎厅 』🍂❄️ —— 基于nuxt开发的ACG音乐论坛',
+            title: "🌺☘『 望月演绎厅 』🍂❄️ —— 基于nuxt开发的ACG音乐论坛",
             htmlAttrs: {
                 "data-theme": "dark"
             }
         }
     },
     runtimeConfig: {
-        apiTest: process.env.LOCALTEST
+        local: process.env.LOCALTEST
     }
 })
