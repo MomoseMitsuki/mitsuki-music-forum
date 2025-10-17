@@ -1,22 +1,29 @@
 <script setup lang="ts">
 import { storeToRefs } from "pinia"
-import { usePlaySettingStore,useUiStatusStore } from "@/stores"
+import { usePlaySettingStore, useUiStatusStore } from "@/stores"
 import { formatTime, formatSingers } from "@/utils/format"
-import { debounce } from "@/utils/utils"
+import { debounce,isInList } from "@/utils/utils"
 import emptyLoveSvg from "~/assets/icons/emptyLove.svg"
 import fullLoveSvg from "~/assets/icons/fullLove.svg"
 const playSettingStore = usePlaySettingStore()
 const uiStatusStore = useUiStatusStore()
-const { $default,$love,isLoad, volume, playMode, currentPlayIndex, isPlay } =
+const { $default, $love, isLoad, volume, playMode, currentPlayIndex, isPlay } =
     storeToRefs(playSettingStore)
 const { isShowLyric } = storeToRefs(uiStatusStore)
 // VO Views Object
 const views = reactive({
-    infoName: $default.value.length === 0 ? "--" : $default.value[currentPlayIndex.value].name,
-    infoSinger: $default.value.length === 0 ? "--" : formatSingers(
-        $default.value[currentPlayIndex.value].singer
-    ),
-    avater: $default.value.length === 0 ? "" : $default.value[currentPlayIndex.value].avater,
+    infoName:
+        $default.value.length === 0
+            ? "--"
+            : $default.value[currentPlayIndex.value].name,
+    infoSinger:
+        $default.value.length === 0
+            ? "--"
+            : formatSingers($default.value[currentPlayIndex.value].singer),
+    avater:
+        $default.value.length === 0
+            ? ""
+            : $default.value[currentPlayIndex.value].avater,
     duration: 0,
     currentTime: 0
 })
@@ -38,9 +45,9 @@ watch(
 
 watch(
     () => {
-        if ($default.value.length === 0)    return
-            return $default.value[currentPlayIndex.value].id
-        },       // if the id changed, we change the music
+        if ($default.value.length === 0) return
+        return $default.value[currentPlayIndex.value].id
+    }, // if the id changed, we change the music
     () => {
         if ($default.value.length === 0) {
             playSettingStore.audio.currentTime = 0
@@ -52,15 +59,21 @@ watch(
             isShowLyric.value = false
             return
         }
-        if ($default.value[currentPlayIndex.value].name === views.infoName)  return
+        if ($default.value[currentPlayIndex.value].name === views.infoName)
+            return
         const { path, name, singer, avater } =
-        $default.value[currentPlayIndex.value]
+            $default.value[currentPlayIndex.value]
         const checkMusic = debounce(() => {
             playSettingStore.audio.src = path
             playSettingStore.audio.currentTime = 0
-            playSettingStore.audio.addEventListener('canplaythrough', () => {       // to make sure the audio has already loaded
-                playSettingStore.audio.play()
-            }, { once: true });
+            playSettingStore.audio.addEventListener(
+                "canplaythrough",
+                () => {
+                    // to make sure the audio has already loaded
+                    playSettingStore.audio.play()
+                },
+                { once: true }
+            )
         })
         checkMusic()
         views.infoName = name
@@ -80,7 +93,9 @@ watch(
 onBeforeMount(() => {
     audio = new Audio()
     playSettingStore.audio = audio
-    $default.value.length === 0 ? "" : audio.src = $default.value[currentPlayIndex.value].path
+    $default.value.length === 0
+        ? ""
+        : (audio.src = $default.value[currentPlayIndex.value].path)
     audio.onloadedmetadata = () => {
         isLoad.value = true
         views.duration = audio.duration
@@ -207,7 +222,33 @@ const showVolumeBar = () => {
     clearTimeout(_timer)
     isShowVolumeBar.value = true
 }
-
+const defaultPlay = (len:number) => {
+    if (currentPlayIndex.value === len - 1) {
+            playSettingStore.audio.currentTime = 0
+    } else {
+        currentPlayIndex.value++
+    }
+}
+const randomPlay = (len:number) => {
+    const org = currentPlayIndex.value
+    while (org === currentPlayIndex.value) {
+        currentPlayIndex.value = Math.floor(Math.random() * (len - 1)) + 1
+    }
+}
+const loopListPlay = (len:number) => {
+    if (currentPlayIndex.value === len - 1) {
+        currentPlayIndex.value = 0
+    } else {
+        currentPlayIndex.value++
+    }
+}
+const loopMusicPlay = (len:number) => {
+    queueMicrotask(() => {
+        playSettingStore.audio.currentTime = 0
+        playSettingStore.audio.play()
+    })
+}
+const playModeArray = [defaultPlay,randomPlay,loopListPlay,loopMusicPlay]
 const endedMusic = () => {
     const len = $default.value.length
     if (len === 0) return
@@ -215,35 +256,7 @@ const endedMusic = () => {
         playSettingStore.audio.currentTime = 0
         return
     }
-    switch (playMode.value) {
-        case 0:
-            if (currentPlayIndex.value === len - 1) {
-                playSettingStore.audio.currentTime = 0
-            } else {
-                currentPlayIndex.value++
-            }
-            break
-        case 1:
-            const org = currentPlayIndex.value
-            while (org === currentPlayIndex.value) {
-                currentPlayIndex.value =
-                    Math.floor(Math.random() * (len - 1)) + 1
-            }
-            break
-        case 2:
-            if (currentPlayIndex.value === len - 1) {
-                currentPlayIndex.value = 0
-            } else {
-                currentPlayIndex.value++
-            }
-            break
-        case 3:
-            queueMicrotask(() => {
-                playSettingStore.audio.currentTime = 0
-                playSettingStore.audio.play()
-            })
-            break
-    }
+    playModeArray[playMode.value](len)
 }
 
 const prevMusic = () => {
@@ -257,7 +270,34 @@ const prevMusic = () => {
         currentPlayIndex.value--
     }
 }
-
+const beforeEnter = (e: Element) => {
+    const el = e as HTMLElement
+    el.style.transform = `translateY(100%)`
+}
+const enter = (e: Element, done: () => void) => {
+    const el = e as HTMLElement
+    requestAnimationFrame(() => {
+        el.addEventListener("transitionend", done, { once: true })
+        el.style.transform = `translateY(0%)`
+    })
+}
+const afterEnter = (e: Element) => {
+    const el = e as HTMLElement
+    el.style.transform = `translateY(0%)`
+}
+const beforeLeave = (e: Element) => {
+    const el = e as HTMLElement
+    el.style.transform = `translateY(0%)`
+}
+const leave = (e: Element, done: () => void) => {
+    const el = e as HTMLElement
+    el.style.transform = `translateY(100%)`
+    el.addEventListener("transitionend", done, { once: true })
+}
+const afterLeave = (e: Element) => {
+    const el = e as HTMLElement
+    el.style.transform = `translateY(100%)`
+}
 </script>
 
 <template>
@@ -286,9 +326,20 @@ const prevMusic = () => {
         </div>
         <!-- music avater -->
         <div class="controller__avater-container">
-            <img :src="views.avater" v-if="$default.length !== 0"/>
-            <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" v-else>
-                <path d="M945.96623 240.45909a511.920513 511.920513 0 0 0-867.951442 543.062838 511.920513 511.920513 0 0 0 867.951442-543.062838zM194.931976 825.697535s-30.133907-18.388802-64.18285-72.843383c-34.108261-54.454581-39.506264-92.952427-39.506264-92.952426l264.917382-100.129992s-0.771143 28.591621 10.202819 46.268598c11.033281 17.617658 36.658966 28.591621 36.658966 28.591621l-208.090053 191.065582z m369.85219-229.444791a99.358848 99.358848 0 1 1-105.409357-168.465151 99.358848 99.358848 0 0 1 105.409357 168.465151z m122.611785-125.10317s0.771143-28.650939-10.262138-46.327917c-11.0926-17.676977-36.599647-28.591621-36.599648-28.591621l208.030735-191.006263s30.193226 18.270164 64.242169 72.724745 39.446946 92.952427 39.446945 92.952427l-264.858063 100.248629z" fill="#707070" p-id="4868"></path><path d="M511.990509 511.96085m-34.820085 0a34.820086 34.820086 0 1 0 69.640171 0 34.820086 34.820086 0 1 0-69.640171 0Z"></path>
+            <img :src="views.avater" v-if="$default.length !== 0" />
+            <svg
+                viewBox="0 0 1024 1024"
+                xmlns="http://www.w3.org/2000/svg"
+                v-else
+            >
+                <path
+                    d="M945.96623 240.45909a511.920513 511.920513 0 0 0-867.951442 543.062838 511.920513 511.920513 0 0 0 867.951442-543.062838zM194.931976 825.697535s-30.133907-18.388802-64.18285-72.843383c-34.108261-54.454581-39.506264-92.952427-39.506264-92.952426l264.917382-100.129992s-0.771143 28.591621 10.202819 46.268598c11.033281 17.617658 36.658966 28.591621 36.658966 28.591621l-208.090053 191.065582z m369.85219-229.444791a99.358848 99.358848 0 1 1-105.409357-168.465151 99.358848 99.358848 0 0 1 105.409357 168.465151z m122.611785-125.10317s0.771143-28.650939-10.262138-46.327917c-11.0926-17.676977-36.599647-28.591621-36.599648-28.591621l208.030735-191.006263s30.193226 18.270164 64.242169 72.724745 39.446946 92.952427 39.446945 92.952427l-264.858063 100.248629z"
+                    fill="#707070"
+                    p-id="4868"
+                ></path>
+                <path
+                    d="M511.990509 511.96085m-34.820085 0a34.820086 34.820086 0 1 0 69.640171 0 34.820086 34.820086 0 1 0-69.640171 0Z"
+                ></path>
             </svg>
         </div>
         <!-- music info -->
@@ -362,7 +413,12 @@ const prevMusic = () => {
         </svg>
         <!-- isLove button -->
         <img
-            :src="$default.length === 0 && $love.includes($default[currentPlayIndex]) ? emptyLoveSvg : fullLoveSvg"
+            :src="
+                $default.length === 0 &&
+                isInList($default[currentPlayIndex],$love)
+                    ? emptyLoveSvg
+                    : fullLoveSvg
+            "
             style="margin: 0 18px"
             class="mini-icon"
         />
@@ -499,7 +555,14 @@ const prevMusic = () => {
             </div>
         </div>
         <!-- show music lyric -->
-        <div class="controller__lyric" @click="() => { if($default.length !== 0) isShowLyric = !isShowLyric }">
+        <div
+            class="controller__lyric"
+            @click="
+                () => {
+                    if ($default.length !== 0) isShowLyric = !isShowLyric
+                }
+            "
+        >
             词
         </div>
         <!-- show play list-->
@@ -519,18 +582,51 @@ const prevMusic = () => {
             </svg>
         </div>
     </div>
-    <MusicLyric
-        style="transition: transform 0.5s ease"
-        :class="{ lyric__containner_leave: !isShowLyric }"
-    />
-    <PlayList 
-        v-if="isShowList"
-    />
+    <Transition
+        @before-enter="beforeEnter"
+        @enter="enter"
+        @after-enter="afterEnter"
+        @before-leave="beforeLeave"
+        @leave="leave"
+        @after-leave="afterLeave"
+    >
+        <MusicLyric
+            v-if="isShowLyric"
+            style="transition: transform 0.5s ease"
+            class="transition__lyric"
+        />
+    </Transition>
+
+    <PlayList v-if="isShowList" />
 </template>
 
 <style scoped lang="scss">
 $iconMedLen: 40px;
 $iconMiniLen: 25px;
+.transition__lyric {
+    @include useTheme {
+        color: getVar("orgTextColor");
+        background-color: getVar("orgBgColor");
+    }
+    position: fixed;
+    z-index: 112;
+    top: $navHeight;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    user-select: none;
+    &::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image: var(--bg-img);
+        background-size: cover;
+        background-position: center;
+        filter: blur(100px);
+        z-index: 111;
+    }
+}
 .mini-icon {
     @extend %iconBase;
     width: $iconMiniLen;

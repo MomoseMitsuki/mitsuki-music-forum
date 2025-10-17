@@ -3,26 +3,33 @@ import Character1 from "@/assets/stickers/footer_character1.png"
 import Character2 from "@/assets/stickers/footer_character2.png"
 import Character3 from "@/assets/stickers/footer_character3.png"
 import Character4 from "@/assets/stickers/footer_character4.png"
-
 </script>
 
 <template>
     <footer class="footer__containner">
-        <img :src="Character1">
-        <img :src="Character2">
+        <img :src="Character1" />
+        <img :src="Character2" />
         <div class="footer__info">
             <div class="footer__link">
-                <a href="https://github.com/MomoseMitsuki/mitsuki-music-forum" target="_blank">Github</a> 开源 | 
-                <a href="https://qm.qq.com/q/Wo1HAQ1zCa" target="_blank">Q群</a> | 
-                <a href="https://t.me/+CtnbK2xUiX1hNzA1" target="_blank">Telegram</a>
+                <a
+                    href="https://github.com/MomoseMitsuki/mitsuki-music-forum"
+                    target="_blank"
+                    >Github</a
+                >
+                开源 |
+                <a href="https://qm.qq.com/q/Wo1HAQ1zCa" target="_blank">Q群</a>
+                |
+                <a href="https://t.me/+CtnbK2xUiX1hNzA1" target="_blank"
+                    >Telegram</a
+                >
             </div>
-           <div class="info__message">
-                <img src="/favicon.ico">
+            <div class="info__message">
+                <img src="/favicon.ico" />
                 <div>© 2025 ~ Forever! 『 望月演绎厅 』 —— ACG音乐论坛</div>
             </div>
         </div>
-        <img :src="Character3">
-        <img :src="Character4">
+        <img :src="Character3" />
+        <img :src="Character4" />
     </footer>
 </template>
 
@@ -50,7 +57,7 @@ import Character4 from "@/assets/stickers/footer_character4.png"
         }
     }
     .footer__info {
-        margin:0 80px;
+        margin: 0 80px;
         font-size: 18px;
         letter-spacing: 1px;
         .info__message {
