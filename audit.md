@@ -1,6 +1,5 @@
 # `nuxt-music-player`审计结果
 
-
 您所审计的工程总共有 **1** 个风险漏洞。
 
 其中：
@@ -19,41 +18,24 @@
 
 下面是漏洞的详细信息
 
-
-
-
-
 ## 低危漏洞
 
 共计 **1** 个
-
 
 ### `nuxt`
 
 **漏洞描述**：
 
 - Nuxt has Client-Side Path Traversal in Nuxt Island Payload Revival
-  - npm漏洞编号：`1108035`
-  - 漏洞详细说明：https://github.com/advisories/GHSA-p6jq-8vc4-79f6
-  - 漏洞等级：低危
-  - 受影响的版本：`>=3.6.0 <3.19.0`
-
+    - npm漏洞编号：`1108035`
+    - 漏洞详细说明：https://github.com/advisories/GHSA-p6jq-8vc4-79f6
+    - 漏洞等级：低危
+    - 受影响的版本：`>=3.6.0 <3.19.0`
 
 **依赖关系**：
 
-
-
 - `nuxt-music-player` / `nuxt`
-
-  
-  
 
 **漏洞包所在目录**：
 
 - `node_modules/nuxt`
-
-
- 
-
-
-
