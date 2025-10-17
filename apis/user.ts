@@ -1,5 +1,5 @@
 import { req } from "@/lib/mitsuki-request-lib/request-bus"
-import type { Music,Video,MusicList,User } from "@/types/index"
+import type { Music, Video, MusicList, User } from "@/types/index"
 
 export const getPlayListService = async () => {
     const info = await req.get("/api/user/playlist")
@@ -12,14 +12,14 @@ export const getLoveListService = async () => {
     return result
 }
 
-export const getUserInfoService = async (id:string) => {
+export const getUserInfoService = async (id: string) => {
     const info = await req.get(`/api/user/info?id=${id}`)
     const result = await info.json<User>()
     return result
 }
 
 export const createUserService = async () => {
-    const info = await req.post("/api/user/create",{
+    const info = await req.post("/api/user/create", {
         name: "mitsuki",
         password: "2361902570",
         email: "https://github.com/MomoseMitsuki"
