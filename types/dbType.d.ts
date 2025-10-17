@@ -45,3 +45,20 @@ export type DBUser = {
     password: string
     ListIds: string[]
 }
+
+export interface RawMongodbData<T> {
+    cursor: {
+        firstBatch: Array<T>
+        id: number
+        ns: string
+        ok: number
+    }
+}
+
+export interface RawMongodbOnlyId {
+    _id: { $oid: string } 
+}
+
+export interface RawMongodbMusicId extends RawMongodbOnlyId {
+    MusicId: { $oid: string } 
+}
