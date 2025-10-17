@@ -32,7 +32,7 @@
         font-weight: bold;
         span {
             margin: 0 2px;
-            color: getVar("fullBarColor")
+            color: getVar("fullBarColor");
         }
     }
 }

@@ -3,16 +3,28 @@ import { type ShallowRef } from "vue"
 import { formatLyric } from "@/utils/format"
 import { usePlaySettingStore } from "@/stores"
 const playSettingStore = usePlaySettingStore()
+const audioStateStore = useAudioStateStore()
+console.log("lyric setup")
 const { currentPlayIndex, isPlay, $default } = storeToRefs(playSettingStore)
 const views = reactive({
-    infoName: $default.value.length === 0 ? "" : $default.value[currentPlayIndex.value].name,
-    infoSinger: $default.value.length === 0 ? "" : formatSingers(
-        $default.value[currentPlayIndex.value].singer
-    ),
-    avater: $default.value.length === 0 ? "" : $default.value[currentPlayIndex.value].avater
+    infoName:
+        $default.value.length === 0
+            ? ""
+            : $default.value[currentPlayIndex.value].name,
+    infoSinger:
+        $default.value.length === 0
+            ? ""
+            : formatSingers($default.value[currentPlayIndex.value].singer),
+    avater:
+        $default.value.length === 0
+            ? ""
+            : $default.value[currentPlayIndex.value].avater
 })
 const getLyricService = async (index: number) => {
-    if ($default.value.length === 0 || !$default.value[index].hasOwnProperty("lyric")) {
+    if (
+        $default.value.length === 0 ||
+        !$default.value[index].hasOwnProperty("lyric")
+    ) {
         isLyric.value = false
         return ""
     }
@@ -38,13 +50,11 @@ const offset = ref(0)
 const isInit = ref(false)
 const isLyric = ref(true)
 const RAFId = ref<number>()
+let cachedTheme: string
 let containerHeight: number
 let liHeight: number
 let maxOffset: number
-let dataArray: Uint8Array<ArrayBuffer>
-let analyser: AnalyserNode
-let source: MediaElementAudioSourceNode
-let audCtx: AudioContext
+
 const containner = useTemplateRef("containnerRef") as Readonly<
     ShallowRef<HTMLDivElement>
 >
@@ -53,47 +63,56 @@ const cvs = useTemplateRef("canvasRef") as Readonly<
     ShallowRef<HTMLCanvasElement>
 >
 let ctx: CanvasRenderingContext2D
-watch(() => {
-        if ($default.value.length === 0)    return
+watch(
+    () => {
+        if ($default.value.length === 0) return
         return $default.value[currentPlayIndex.value].id
     },
     async () => {
-        if ($default.value.length === 0 || $default.value[currentPlayIndex.value].name === views.infoName)  return
-        const { name, singer, avater } =
-        $default.value[currentPlayIndex.value]
+        if (
+            $default.value.length === 0 ||
+            $default.value[currentPlayIndex.value].name === views.infoName
+        )
+            return
+        const { name, singer, avater } = $default.value[currentPlayIndex.value]
         const data = await getLyricService(currentPlayIndex.value)
         views.infoName = name
         views.infoSinger = formatSingers(singer)
         views.avater = avater
         document.documentElement.style.setProperty("--bg-img", `url(${avater})`)
-        if (isLyric.value)  lyric.value = formatLyric(data)
+        if (isLyric.value) lyric.value = formatLyric(data)
     }
 )
 
 const analyseAudio = () => {
     isPlay.value = true
     if (isInit.value) return
-    audCtx = new AudioContext()
-    source = audCtx.createMediaElementSource(playSettingStore.audio)
-    analyser = audCtx.createAnalyser()
-    analyser.fftSize = 1024
-    dataArray = new Uint8Array(analyser.frequencyBinCount)
-    source.connect(analyser)
-    analyser.connect(audCtx.destination)
+    if (audioStateStore.isAnalysed) return
+    audioStateStore.audCtx = new AudioContext()
+    audioStateStore.source = audioStateStore.audCtx.createMediaElementSource(
+        playSettingStore.audio
+    )
+    audioStateStore.analyser = audioStateStore.audCtx.createAnalyser()
+    audioStateStore.analyser.fftSize = 1024
+    audioStateStore.dataArray = new Uint8Array(
+        audioStateStore.analyser.frequencyBinCount
+    )
+    audioStateStore.source.connect(audioStateStore.analyser)
+    audioStateStore.analyser.connect(audioStateStore.audCtx.destination)
     isInit.value = true
+    audioStateStore.isAnalysed = true
 }
 onMounted(() => {
-    getLyricService(currentPlayIndex.value).then(
-        (res) => {
-            if (res === "")  return
-            lyric.value = formatLyric(res)
-        }
-    )
-    if($default.value.length !== 0) {
+    cachedTheme = document.documentElement.getAttribute("data-theme")!
+    getLyricService(currentPlayIndex.value).then((res) => {
+        if (res === "") return
+        lyric.value = formatLyric(res)
+    })
+    if ($default.value.length !== 0) {
         document.documentElement.style.setProperty(
-        "--bg-img",
-        `url(${$default.value[currentPlayIndex.value].avater})`
-    )
+            "--bg-img",
+            `url(${$default.value[currentPlayIndex.value].avater})`
+        )
     }
     // calculate the container size for the lyrics section
     // and the maximum offset for the lyrics
@@ -106,30 +125,16 @@ onMounted(() => {
     setOffset()
     ctx = cvs.value.getContext("2d") as CanvasRenderingContext2D
     initCvs()
-    playSettingStore.audio.addEventListener("play",analyseAudio)
+    playSettingStore.audio.addEventListener("play", analyseAudio)
+    analyseAudio()
     cvsDraw()
 })
 onBeforeUnmount(() => {
-    if(RAFId.value !== void 0){
+    if (RAFId.value !== void 0) {
         cancelAnimationFrame(RAFId.value)
     }
-    if (isInit.value) {
-        if (source) {
-            source.disconnect(); // 断开音频源
-            source = null as any
-        }
-        if (analyser) {
-            analyser.disconnect(); // 断开分析器
-            analyser = null as any
-        }
-        if (audCtx) {
-            audCtx.close(); // 关闭音频上下文，释放资源
-            audCtx = null as any
-        }
-        isInit.value = false;
-    }
     playSettingStore.audio.removeEventListener("timeupdate", setOffset)
-    playSettingStore.audio.removeEventListener("play",analyseAudio)
+    playSettingStore.audio.removeEventListener("play", analyseAudio)
 })
 /**
  * @description
@@ -149,7 +154,7 @@ const findIndex = () => {
  * adjust the offset of lyrics display based on audio progress
  */
 const setOffset = () => {
-    if(!isLyric.value) return
+    if (!isLyric.value) return
     currentLyricIndex.value = findIndex()
     offset.value =
         liHeight * currentLyricIndex.value + liHeight / 2 - containerHeight / 2
@@ -167,7 +172,7 @@ const setOffset = () => {
  * and redefine the coordinate system
  */
 const initCvs = () => {
-    if(!cvs.value){
+    if (!cvs.value) {
         return
     }
     const width = cvs.value.clientWidth
@@ -183,7 +188,7 @@ const initCvs = () => {
  */
 const cvsDraw = () => {
     RAFId.value = requestAnimationFrame(cvsDraw)
-    if (!isInit.value) return
+    if (!audioStateStore.isAnalysed) return
     const { width, height } = cvs.value
     // clear canvas
     ctx.save()
@@ -191,20 +196,17 @@ const cvsDraw = () => {
     ctx.clearRect(0, 0, width, height)
     ctx.restore()
     // change the color of the visualization through the theme
-    const theme = document.documentElement.getAttribute("data-theme")
-    if (theme === "light") {
-        ctx.fillStyle = "#ccc"
-    } else {
-        ctx.fillStyle = "#1c1c1c"
-    }
-    analyser.getByteFrequencyData(dataArray)
+    cachedTheme === "light"
+        ? (ctx.fillStyle = "#ccc")
+        : (ctx.fillStyle = "#1c1c1c")
+    audioStateStore.analyser.getByteFrequencyData(audioStateStore.dataArray)
     // because the obtained data is a progressively decreasing array,
     // for aesthetic reasons, we only visualize half of its data
-    const len = dataArray.length / 2
+    const len = audioStateStore.dataArray.length / 2
     const barWidth = (Math.PI * 2 * 175) / len
     const maxHeight = (height - 350) / 2.5
     for (let i = 0; i < len; i++) {
-        const data = dataArray[i]
+        const data = audioStateStore.dataArray[i]
         const angle = (1 / len) * Math.PI * 2
         ctx.rotate(angle)
         const barHeight = (data / 255) * maxHeight
@@ -245,7 +247,11 @@ const cvsDraw = () => {
             </div>
             <div class="lyric__info" ref="containnerRef">
                 <!-- music__lyric -->
-                <ul :style="`transform:translateY(-${offset}px)`" ref="ulRef" v-if="isLyric">
+                <ul
+                    :style="`transform:translateY(-${offset}px)`"
+                    ref="ulRef"
+                    v-if="isLyric"
+                >
                     <li
                         v-for="(item, index) in lyric"
                         :class="{
@@ -255,9 +261,7 @@ const cvsDraw = () => {
                         {{ item.words }}
                     </li>
                 </ul>
-                <div class="nolyric__info" v-else>
-                    还没有歌词哦
-                </div>
+                <div class="nolyric__info" v-else>还没有歌词哦</div>
             </div>
         </div>
     </div>
@@ -265,28 +269,6 @@ const cvsDraw = () => {
 
 <style scoped lang="scss">
 .lryic__background {
-    @include useTheme {
-        color: getVar("orgTextColor");
-        background-color: getVar("orgBgColor");
-    }
-    position: fixed;
-    z-index: 112;
-    top: $navHeight;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    overflow: hidden;
-    user-select: none;
-    &::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background-image: var(--bg-img);
-        background-size: cover;
-        background-position: center;
-        filter: blur(100px);
-        z-index: 111;
-    }
     .lryic__containner {
         display: flex;
         justify-content: center;
@@ -380,8 +362,8 @@ const cvsDraw = () => {
                 margin-left: 100px;
                 width: 50vw;
                 line-height: 598px;
-                height:598px;
-                font-size:30px;
+                height: 598px;
+                font-size: 30px;
                 font-weight: bold;
                 letter-spacing: 2px;
                 @include useTheme {

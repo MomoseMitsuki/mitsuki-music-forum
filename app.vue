@@ -3,16 +3,16 @@ import MusicController from "~/components/MusicController.vue"
 import ForumNav from "~/components/ForumNav.vue"
 import { getUserInfoService } from "./apis/user"
 const uiStatusStore = useUiStatusStore()
-const userStore = useUserStore() 
+const userStore = useUserStore()
 const { data } = await useAsyncData(
     "user",
     () => getUserInfoService("68e8f3a670e1d7faa23026e5"),
     {
-        default:() => ({
+        default: () => ({
             ...userStore.user,
             $list: userStore.$lists,
-            $default:[],
-            $love:[],
+            $default: [],
+            $love: []
         })
     }
 )
@@ -62,15 +62,15 @@ initUser()
     top: 0;
     z-index: 1000;
     will-change: transform;
-    transition:0.6s linear;
+    transition: 0.6s linear;
     svg {
         display: block;
         width: 20px;
         height: 20px;
         will-change: transform;
-        transition: 0.6s cubic-bezier(0.5,-0.5,1,1);
+        transition: 0.6s cubic-bezier(0.5, -0.5, 1, 1);
         @include useTheme {
-            fill: getVar("textColor")
+            fill: getVar("textColor");
         }
     }
 }
