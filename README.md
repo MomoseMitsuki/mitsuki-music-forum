@@ -21,7 +21,7 @@
 
 后端为 nitro(nuxt内置)
 
-前端采用: Nuxt.js, Vite, Vue3 + Composition API, Scss, TypeScript, Vue-Router, request-lib(fetch API),
+前端采用: Nuxt.js, Vite, Vue3 + Composition API, Scss, TypeScript, Vue-Router, request-lib(fetch API), Web Audio API, canvas
 
 后端采用: Nodejs, nitro, prisma, mongodb
 
