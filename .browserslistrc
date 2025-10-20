@@ -1,0 +1,4 @@
+defaults
+not IE 11
+last 2 versions
+> 0.2%
