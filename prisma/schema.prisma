@@ -6,6 +6,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  output   = "../app/generated/prisma"
 }
 
 datasource db {
@@ -40,7 +41,7 @@ model MusicList {
   id       String   @id @default(auto()) @map("_id") @db.ObjectId
   name     String
   avater   String?
-  type     String // offical   user
+  type     String // official   user
   Musics   Music[]  @relation(fields: [MusicIds], references: [id])
   MusicIds String[] @db.ObjectId
   Users    User[]   @relation(fields: [UserIds], references: [id])
