@@ -35,6 +35,12 @@ export type DBMusicList = {
     UserIds: string[]
 }
 
+export type DBMusicListWithNoData = {
+    id: string
+    name: string
+    avater: string | null
+}
+
 export type DBUser = {
     Lists: Array<DBMusicList>
 } & {
@@ -59,6 +65,26 @@ export interface RawMongodbOnlyId {
     _id: { $oid: string } 
 }
 
+export interface RawMongodbListWithNoData extends RawMongodbOnlyId {
+    name: string
+    avater: string
+    type: string
+}
 export interface RawMongodbMusicId extends RawMongodbOnlyId {
     MusicId: { $oid: string } 
+}
+
+export interface RawMongodbMusic extends RawMongodbOnlyId {
+    name: string
+    singer: Array<string>
+    path: string
+    duration: number
+    avater: string
+    lyric?: {
+        url: string
+    } & RawMongodbMusicId
+    video: {
+        url: string
+        avater: string
+    } & RawMongodbMusicId
 }

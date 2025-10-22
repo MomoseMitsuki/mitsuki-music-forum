@@ -13,7 +13,15 @@ export interface MusicList {
     id: string
     avater: string
     name: string
+    type: string
     datas: Array<Music>
+}
+
+export interface MusicListWithNotData {
+    id: string
+    avater: string
+    name: string
+    type: string
 }
 
 export interface User {
