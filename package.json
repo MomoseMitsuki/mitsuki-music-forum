@@ -1,6 +1,6 @@
 {
   "name": "nuxt-music-player",
-  "version": "0.0.96",
+  "version": "0.0.97",
   "private": true,
   "$schema": "https://json.schemastore.org/package.json",
   "scripts": {
@@ -12,6 +12,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier . --write",
+    "start": "pm2 start ecosystem.config.js",
+    "stop": "pm2 delete mitsuki-music-forum",
     "prepare": "husky",
     "precommit": "node ./.husky/scripts/updateVersion.js && git add package.json",
     "prisma:generate": "pnpm prisma generate",
