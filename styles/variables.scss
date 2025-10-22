@@ -1,6 +1,6 @@
 $pinkColor: #f595bb;
 $redColor: #c70c0c;
-$yellowColor: #f5f2e9;
+$yellowColor: #f5f2e9ff;
 // scss variable control theme switching
 $themes: (
     light: (
@@ -8,9 +8,10 @@ $themes: (
         textColor: #1c1c1c,
         fullBarColor: $pinkColor,
         orgTextColor: #222,
-        orgBgColor: $yellowColor,
+        orgBgColor: #f3f0e7,
         selectedColor: #e4e1d8,
         lightBgColor: #eeeeee40,
+        swiperBgColor: #f8f8f880,
         main: url("~/assets/background/main_light.png")
     ),
     dark: (
@@ -21,6 +22,7 @@ $themes: (
         orgBgColor: #222,
         selectedColor: #333,
         lightBgColor: #11111140,
+        swiperBgColor: #11111180,
         main: url("~/assets/background/main_dark.png")
     )
 );
