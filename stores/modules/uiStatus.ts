@@ -17,7 +17,6 @@ export const useUiStatusStore = defineStore("uiStatusStore", () => {
             const startY = Math.round(startRect.top + startRect.height / 2)
             const endX = Math.round(endRect.left)
             const endY = Math.round(endRect.top)
-            console.log(endX, endY)
             const div = document.createElement("div")
             div.classList.add("add-to-playlist")
             div.innerHTML = svg

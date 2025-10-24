@@ -109,6 +109,7 @@ export const formatList = (list: DBMusicList) => {
         id: list.id,
         name: list.name,
         avater: list.avater,
+        type: list.type,
         datas: formatMusics(list.Musics)
     }
     return result
@@ -121,6 +122,7 @@ export const formatLists = (lists: Array<DBMusicList>) => {
     }
     return result
 }
+
 export const formatMusic = (music: DBMusic) => {
     const result = {
         id: music.id,

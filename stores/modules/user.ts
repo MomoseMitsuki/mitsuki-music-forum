@@ -6,7 +6,7 @@ export const useUserStore = defineStore("userStore", () => {
         id: "",
         avater: "",
         email: "",
-        name: "未登录"
+        name: ""
     }
     const $lists = reactive<Array<MusicList>>([])
     return {
