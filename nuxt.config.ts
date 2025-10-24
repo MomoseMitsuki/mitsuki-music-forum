@@ -4,27 +4,21 @@ export default defineNuxtConfig({
     modules: ["@pinia/nuxt", "@nuxt/eslint"],
     devtools: { enabled: false },
     nitro: {
-        preset: "node-server"
+        alias: {
+            ".prisma/client/default": "./app/generated/prisma/default.js"
+        },
+        externals: {
+            trace: false,
+            inline: ["@prisma/client"]
+        }
     },
     srcDir: "./",
     vite: {
+        ssr: {
+            noExternal: ["@prisma/client"]
+        },
         build: {
-            rollupOptions: {
-                output: {
-                    entryFileNames: "js/[name].[hash].js",
-                    chunkFileNames: "js/[name].[hash].js",
-                    assetFileNames: (assetInfo) => {
-                        const name = assetInfo.names[0]
-                        if (/\.(png|jpe?g|gif|svg|webp)$/.test(name || "")) {
-                            return "img/[name].[hash][extname]"
-                        }
-                        if (/\.css$/.test(name || "")) {
-                            return "css/[name].[hash][extname]"
-                        }
-                        return "assets/[name].[hash][extname]"
-                    }
-                }
-            }
+            assetsDir: "_nuxt"
         },
         esbuild: {
             drop: []
