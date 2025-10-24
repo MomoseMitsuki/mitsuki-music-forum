@@ -1,12 +1,6 @@
 import { req } from "@/lib/mitsuki-request-lib/request-bus"
 import type { Music, Video, MusicList, User } from "@/types/index"
 
-export const getPlayListService = async () => {
-    const info = await req.get("/api/user/playlist")
-    const result = await info.json<MusicList>()
-    return result
-}
-
 export const getLoveListService = async () => {
     const result = await req.get("/api/user/lovelist")
     return result

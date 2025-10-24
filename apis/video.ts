@@ -8,7 +8,21 @@ export const getVideoService = async (id: string) => {
 }
 
 export const getRandomVideoService = async (exclude: string, limit = 5) => {
-    const info = await req.get(`/api/video/random?exclude=${exclude}&limit=${limit}`)
+    const info = await req.get(
+        `/api/video/random?exclude=${exclude}&limit=${limit}`
+    )
     const result = await info.json<Array<Music>>()
+    return result
+}
+
+export const getVideoByNameService = async (name: string) => {
+    const info = await req.get(`/api/video/name?name=${name}`)
+    const result = await info.json<Array<Music>>()
+    return result
+}
+
+export const getAllVideoService = async () => {
+    const info = await req.get(`/api/video/all`)
+    const result = await info.json<Array<Video>>()
     return result
 }
