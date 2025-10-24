@@ -62,7 +62,7 @@ export interface RawMongodbData<T> {
 }
 
 export interface RawMongodbOnlyId {
-    _id: { $oid: string } 
+    _id: { $oid: string }
 }
 
 export interface RawMongodbListWithNoData extends RawMongodbOnlyId {
@@ -71,7 +71,7 @@ export interface RawMongodbListWithNoData extends RawMongodbOnlyId {
     type: string
 }
 export interface RawMongodbMusicId extends RawMongodbOnlyId {
-    MusicId: { $oid: string } 
+    MusicId: { $oid: string }
 }
 
 export interface RawMongodbMusic extends RawMongodbOnlyId {

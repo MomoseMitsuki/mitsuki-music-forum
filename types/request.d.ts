@@ -34,3 +34,11 @@ interface GetRandomVideoRequest {
     limit: number
     exclude: string
 }
+
+interface CreateListRequest {
+    name: string
+    type: "user" | "official"
+    avater: string
+    userId: string
+    musicIds: Array<string>
+}
