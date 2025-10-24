@@ -1,21 +1,19 @@
-import fs from "fs"
 import { AddLyricRequest } from "@/types"
-import prisma from '~/server/model'
+import prisma from "~/server/model"
 
-export const getLryicService = async (id: string) => {
-    const url = process.env.LYRIC_LOCALURL + id + ".lrc"
-    const lyricInfo = await fs.promises.readFile(url, {
-        encoding: "utf-8"
+export const addLyricService = async (option: AddLyricRequest) => {
+    const result = await prisma.$transaction(async (tx) => {
+        const music = await tx.music.findFirst({
+            where: { name: option.musicName },
+            select: { id: true }
+        })
+        if (music === null) {
+            return { message: "没有找到此歌曲名哦" }
+        }
+        await tx.lyric.create({
+            data: { MusicId: music!.id, url: option.url }
+        })
+        return { message: "创建成功" }
     })
-    return lyricInfo
-}
-
-export const addLyricService = async (
-    option: AddLyricRequest,
-    MusicId: string
-) => {
-    const { url } = option
-    await prisma.lyric.create({
-        data: { url, MusicId }
-    })
+    return result
 }

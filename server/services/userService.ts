@@ -1,5 +1,5 @@
 import { formatUser } from "~/utils/format"
-import prisma from '~/server/model'
+import prisma from "~/server/model"
 
 export const createUserService = async (
     name: string,

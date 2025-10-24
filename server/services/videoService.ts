@@ -1,15 +1,26 @@
-import { AddVideoRequest, DBMusic, RawMongodbData, RawMongodbMusicId,RawMongodbOnlyId } from "@/types"
+import {
+    AddVideoRequest,
+    RawMongodbData,
+    RawMongodbMusicId,
+    RawMongodbOnlyId,
+    Video
+} from "@/types"
 import { formatMusics } from "~/utils/format"
-import prisma from '~/server/model'
+import prisma from "~/server/model"
 
-
-export const addVideoService = async (
-    option: AddVideoRequest,
-    MusicId: string
-) => {
-    const { url, avater } = option
-    await prisma.video.create({
-        data: { url, avater, MusicId }
+export const addVideoService = async (option: AddVideoRequest) => {
+    const result = await prisma.$transaction(async (tx) => {
+        const music = await tx.music.findFirst({
+            where: { name: option.musicName },
+            select: { id: true }
+        })
+        if (music === null) {
+            return { message: "没有找到此歌曲名哦" }
+        }
+        await tx.video.create({
+            data: { MusicId: music!.id, url: option.url, avater: option.avater }
+        })
+        return { message: "创建成功" }
     })
 }
 
@@ -56,19 +67,19 @@ export const getVideoInfoService = async (page: number, limit: number) => {
     return result
 }
 
-export const getVideoRandomService = async (exclude:string,limit:number) => {
+export const getVideoRandomService = async (exclude: string, limit: number) => {
     const result = await prisma.$transaction(async (tx) => {
-        const videoIds = await tx.$runCommandRaw({
-            aggregate: 'Video',
+        const videoIds = (await tx.$runCommandRaw({
+            aggregate: "Video",
             pipeline: [
                 { $sample: { size: limit + 1 } },
                 { $project: { MusicId: 1 } }
             ],
-            cursor: {},
-        }) as unknown as RawMongodbData<RawMongodbMusicId>
-        const musicIds:Array<string> = []
+            cursor: {}
+        })) as unknown as RawMongodbData<RawMongodbMusicId>
+        const musicIds: Array<string> = []
         let count = 0
-        videoIds.cursor.firstBatch.forEach(it => {
+        videoIds.cursor.firstBatch.forEach((it) => {
             if (it._id.$oid === exclude || count === limit) return
             musicIds.push(it.MusicId.$oid)
             count++
@@ -82,11 +93,11 @@ export const getVideoRandomService = async (exclude:string,limit:number) => {
     return result
 }
 
-export const getVideoInfoByNameService = async (name:string) => {
+export const getVideoInfoByNameService = async (name: string) => {
     const result = await prisma.$transaction(async (tx) => {
         const names = await tx.music.findMany({
             where: {
-                name: { contains:name, mode: "insensitive" }
+                name: { contains: name, mode: "insensitive" }
             },
             select: { id: true }
         })!
@@ -100,7 +111,10 @@ export const getVideoInfoByNameService = async (name:string) => {
             projection: { _id: 1 }
         })) as unknown as RawMongodbData<RawMongodbOnlyId>
         const lists = await tx.musicList.findMany({
-            where: { name: { contains: name, mode: "insensitive" }, type: "offical" },
+            where: {
+                name: { contains: name, mode: "insensitive" },
+                type: "official"
+            },
             select: { Musics: { select: { id: true } } }
         })
         const ids = new Set<string>()
@@ -109,13 +123,31 @@ export const getVideoInfoByNameService = async (name:string) => {
         lists.map((list) => list.Musics.map((it) => ids.add(it.id)))
         const uniqueIds = [...ids]
         const result = await tx.music.findMany({
-            where: { 
+            where: {
                 id: { in: uniqueIds },
                 video: { isNot: null }
             },
-            include: { video: true, lyric: true },
+            include: { video: true, lyric: true }
         })
         return formatMusics(result)
     })
+    return result
+}
+
+export const getAllVideoService = async () => {
+    const musics = await prisma.music.findMany({
+        where: { video: { isNot: null } },
+        include: { video: true }
+    })
+    const result: Array<Video> = []
+    for (const music of musics) {
+        result.push({
+            id: music.video!.id,
+            avater: music.video!.avater,
+            url: music.video!.url,
+            name: music.name,
+            singer: music.singer
+        })
+    }
     return result
 }
