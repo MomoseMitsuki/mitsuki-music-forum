@@ -1,32 +1,33 @@
 <script setup lang="ts">
-import { getAllVideoService } from "~/apis/video"
-const { data: videos } = await useAsyncData(
-    () => "page-video-index",
-    () => getAllVideoService()
+import { getAllListService } from "~/apis/list"
+import ListView from "~/components/ListView.vue"
+const { data } = await useAsyncData(
+    () => "page-index-list",
+    () => getAllListService()
 )
 </script>
 
 <template>
-    <div class="video__containner">
-        <h1>全部MV</h1>
+    <div class="list__containner">
+        <h1>所有歌单</h1>
         <div class="grid__containner">
-            <VideoView
-                v-for="item in videos"
+            <ListView
+                v-for="item in data"
+                :id="item.id"
+                :avater="item.avater"
                 :name="item.name"
-                :singer="item.singer"
-                :video="item"
+                :type="item.type"
             />
         </div>
     </div>
 </template>
 
 <style scoped lang="scss">
-$width: 1180px;
-.video__containner {
+$width: 1080px;
+.list__containner {
     @extend %themeStyle;
     margin: $navHeight + 40px auto;
     width: $width;
-    min-height: 700px;
     border-radius: 20px;
     padding: 20px;
     .grid__containner {

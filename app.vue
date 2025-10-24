@@ -1,27 +1,23 @@
 <script setup lang="ts">
-import MusicController from "~/components/MusicController.vue"
-import ForumNav from "~/components/ForumNav.vue"
+import MusicController from "~/views/MusicController.vue"
+import ForumNav from "~/views/ForumNav.vue"
 import { getUserInfoService } from "./apis/user"
-const uiStatusStore = useUiStatusStore()
+import type { MusicList } from "@/types"
+
 const userStore = useUserStore()
-const { data } = await useAsyncData(
-    "user",
-    () => getUserInfoService("68e8f3a670e1d7faa23026e5"),
-    {
-        default: () => ({
-            ...userStore.user,
-            $list: userStore.$lists,
-            $default: [],
-            $love: []
-        })
-    }
+const playSettingStore = usePlaySettingStore()
+const { $love, $default } = storeToRefs(playSettingStore)
+const { data } = await useAsyncData("user", () =>
+    getUserInfoService("68e8f3a670e1d7faa23026e5")
 )
 const initUser = () => {
-    userStore.$lists = data.value.$list
-    userStore.user.id = data.value.id
-    userStore.user.name = data.value.name
-    userStore.user.avater = data.value.avater
-    userStore.user.email = data.value.email
+    $default.value = data.value!.$default
+    $love.value = data.value!.$love
+    userStore.$lists = data.value!.$list
+    userStore.user.id = data.value!.id
+    userStore.user.name = data.value!.name
+    userStore.user.avater = data.value!.avater
+    userStore.user.email = data.value!.email
 }
 initUser()
 </script>
