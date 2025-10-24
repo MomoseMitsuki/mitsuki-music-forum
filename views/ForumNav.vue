@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { getUserInfoService } from "~/apis/user"
 import { addMusicService, getMusicByNameService } from "~/apis/music"
-import { addOneMusicToListService } from "~/apis/list"
+import { addOneMusicToListService, createListService } from "~/apis/list"
 
 const router = useRouter()
-const searchTypes = ["搜歌曲", "搜歌单", "搜MV"]
+const searchTypes = ["歌曲", "歌单", "MV"]
 const searchTypes_index = ref(0)
 const isShowLightTheme = ref(true)
 const searchName = ref("")
@@ -24,29 +24,36 @@ const changeTheme = () => {
 }
 const submitAndGetMusic = async (e: Event) => {
     e.preventDefault()
-    const result = await getMusicByNameService(searchName.value)
-    console.log(result)
+    router.push(
+        `/search?type=${searchTypes[searchTypes_index.value]}&name=${searchName.value}`
+    )
 }
+// ------------------------------------
 const data = {
     userId: "68e8f3a670e1d7faa23026e5",
     musicId: "68e8b11c1b31406973b8e7bb",
     name: "$love"
 }
 const musicData = {
-    name: "ソラノキオク (天空的记忆)",
-    path: "/music/00000104.flac",
-    avater: "/avater/music/00000104.webp",
-    singer: ["米倉千尋"],
-    duration: 235,
-    lyric: {
-        musicName: "ソラノキオク (天空的记忆)",
-        url: "/lyric/00000104.lrc"
-    },
+    name: "Golden Mission",
+    path: "/music/000000ED.flac",
+    avater: "/avater/music/000000ED.webp",
+    singer: ["佐咲紗花"],
+    duration: 250,
     video: {
-        musicName: "ソラノキオク (天空的记忆)",
-        url: "/video/00000104.mp4",
-        avater:""
+        musicName: "Golden Mission",
+        avater: "/avater/video/000000ED.png",
+        url: "/video/000000ED.mp4"
+    },
+    lyric: {
+        musicName: "Golden Mission",
+        url: "/lyric/000000ED.lrc"
     }
+}
+const listData = {
+    type: "official" as const,
+    name: "拔作岛",
+    avater: "/avater/music/00000006.png"
 }
 </script>
 
@@ -54,7 +61,7 @@ const musicData = {
     <nav class="nav__containner">
         <NuxtLink to="/" class="nav__item">首页</NuxtLink>
         <NuxtLink to="/video" class="nav__item">视频</NuxtLink>
-        <NuxtLink to="/" class="nav__item">歌单</NuxtLink>
+        <NuxtLink to="/list" class="nav__item">歌单</NuxtLink>
         <form @submit="submitAndGetMusic" class="search__containner">
             <!-- search type -->
             <div
@@ -64,7 +71,7 @@ const musicData = {
                         (searchTypes_index + 1) % searchTypes.length
                 "
             >
-                {{ searchTypes[searchTypes_index] }}
+                {{ `搜${searchTypes[searchTypes_index]}` }}
             </div>
             <input
                 type="text"
@@ -111,7 +118,7 @@ const musicData = {
                 d="M529.611373 1023.38565c-146.112965 0-270.826063-51.707812-374.344078-155.225827C51.74928 764.641808 0.041469 639.826318 0.041469 493.815745c0-105.053891 29.693595-202.326012 88.978393-292.22593 59.38719-89.797526 137.000103-155.942569 232.83874-198.63991 6.041111-4.607627 12.184613-3.788493 18.225724 2.252618 7.576986 4.607627 9.931996 11.365479 6.860244 20.580733C322.677735 83.736961 310.493122 142.202626 310.493122 201.589815c0 135.464227 48.328885 251.474031 144.986656 348.131801 96.657771 96.657771 212.667574 144.986656 348.131801 144.986656 74.541162 0 139.252721-11.365479 194.032283-34.19883C1003.684974 655.799424 1009.726084 656.618558 1015.767195 662.659669c7.576986 4.607627 9.931996 11.365479 6.860244 20.580733C983.104241 786.758417 918.802249 869.286132 829.721465 930.925939 740.743072 992.565746 640.706375 1023.38565 529.611373 1023.38565z"
             ></path>
         </svg>
-        <!--<div @click="addMusicService(musicData)">创建用户</div>-->
+        <div @click="addMusicService(musicData)">创建用户</div>
     </nav>
 </template>
 
@@ -122,6 +129,7 @@ const musicData = {
     position: fixed;
     width: 100%;
     height: $navHeight;
+    border-bottom: 1px solid #ccccccf0;
     align-items: center;
     padding-left: 15%;
     z-index: 100;

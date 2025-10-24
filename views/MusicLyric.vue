@@ -4,31 +4,32 @@ import { formatLyric } from "@/utils/format"
 import { usePlaySettingStore } from "@/stores"
 const playSettingStore = usePlaySettingStore()
 const audioStateStore = useAudioStateStore()
-console.log("lyric setup")
 const { currentPlayIndex, isPlay, $default } = storeToRefs(playSettingStore)
 const views = reactive({
     infoName:
-        $default.value.length === 0
+        $default.value.datas.length === 0
             ? ""
-            : $default.value[currentPlayIndex.value].name,
+            : $default.value.datas[currentPlayIndex.value].name,
     infoSinger:
-        $default.value.length === 0
+        $default.value.datas.length === 0
             ? ""
-            : formatSingers($default.value[currentPlayIndex.value].singer),
+            : formatSingers(
+                  $default.value.datas[currentPlayIndex.value].singer
+              ),
     avater:
-        $default.value.length === 0
+        $default.value.datas.length === 0
             ? ""
-            : $default.value[currentPlayIndex.value].avater
+            : $default.value.datas[currentPlayIndex.value].avater
 })
 const getLyricService = async (index: number) => {
     if (
-        $default.value.length === 0 ||
-        !$default.value[index].hasOwnProperty("lyric")
+        $default.value.datas.length === 0 ||
+        !$default.value.datas[index].hasOwnProperty("lyric")
     ) {
         isLyric.value = false
         return ""
     }
-    const lyric = $default.value[index].lyric
+    const lyric = $default.value.datas[index].lyric
     if (lyric) {
         const res = await fetch(lyric)
         const data = await res.text()
@@ -65,16 +66,17 @@ const cvs = useTemplateRef("canvasRef") as Readonly<
 let ctx: CanvasRenderingContext2D
 watch(
     () => {
-        if ($default.value.length === 0) return
-        return $default.value[currentPlayIndex.value].id
+        if ($default.value.datas.length === 0) return
+        return $default.value.datas[currentPlayIndex.value].id
     },
     async () => {
         if (
-            $default.value.length === 0 ||
-            $default.value[currentPlayIndex.value].name === views.infoName
+            $default.value.datas.length === 0 ||
+            $default.value.datas[currentPlayIndex.value].name === views.infoName
         )
             return
-        const { name, singer, avater } = $default.value[currentPlayIndex.value]
+        const { name, singer, avater } =
+            $default.value.datas[currentPlayIndex.value]
         const data = await getLyricService(currentPlayIndex.value)
         views.infoName = name
         views.infoSinger = formatSingers(singer)
@@ -108,10 +110,10 @@ onMounted(() => {
         if (res === "") return
         lyric.value = formatLyric(res)
     })
-    if ($default.value.length !== 0) {
+    if ($default.value.datas.length !== 0) {
         document.documentElement.style.setProperty(
             "--bg-img",
-            `url(${$default.value[currentPlayIndex.value].avater})`
+            `url(${$default.value.datas[currentPlayIndex.value].avater})`
         )
     }
     // calculate the container size for the lyrics section
@@ -196,9 +198,7 @@ const cvsDraw = () => {
     ctx.clearRect(0, 0, width, height)
     ctx.restore()
     // change the color of the visualization through the theme
-    cachedTheme === "light"
-        ? (ctx.fillStyle = "#ccc")
-        : (ctx.fillStyle = "#1c1c1c")
+    ctx.fillStyle = "#1c1c1c"
     audioStateStore.analyser.getByteFrequencyData(audioStateStore.dataArray)
     // because the obtained data is a progressively decreasing array,
     // for aesthetic reasons, we only visualize half of its data

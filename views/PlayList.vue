@@ -1,18 +1,21 @@
 <script setup lang="ts">
-import { usePlaySettingStore, useUserStore } from "~/stores/index"
-import { formatSingers, formatTime } from "#imports"
+import { usePlaySettingStore } from "~/stores/index"
+import { formatSingers, formatTime } from "@/utils/format"
+import { useMusicOper } from "@/composables/useMusicOper"
 import type { Music } from "@/types/index"
 import emptyDefault from "@/assets/stickers/emptyDefault.webp"
+
 const playSettingStore = usePlaySettingStore()
+const { playVideo, addMusicToList, deleteMusicToList } = useMusicOper()
 const router = useRouter()
-const { currentPlayIndex, $default } = storeToRefs(playSettingStore)
+const { currentPlayIndex, $default, $love } = storeToRefs(playSettingStore)
 const currentHoverIndex = ref(-1)
 const isShowSearch = ref(false)
 const searchName = ref("")
 const searchMusic = (arr: Array<Music>) => {
     if (searchName.value === "") return arr
     const regx = new RegExp(searchName.value, "i")
-    const newArr = $default.value.filter((item) => {
+    const newArr = $default.value.datas.filter((item) => {
         if (regx.test(item.name)) return true
         for (const singer of item.singer) {
             if (regx.test(singer)) return true
@@ -29,19 +32,13 @@ const playMusic = (index: number) => {
         currentPlayIndex.value = index
     }
 }
-const playVideo = ($event: Event, id: string) => {
-    $event.stopPropagation()
-    router.push({
-        path: `/video/${id}`
-    })
-}
 const deleteAMusic = ($event: Event, index: number) => {
     $event.stopPropagation()
-    $default.value.splice(index, 1)
+    $default.value.datas.splice(index, 1)
     if (currentPlayIndex.value > index) {
         currentPlayIndex.value--
     } else if (
-        currentPlayIndex.value === $default.value.length &&
+        currentPlayIndex.value === $default.value.datas.length &&
         currentPlayIndex.value === index
     ) {
         currentPlayIndex.value--
@@ -54,7 +51,7 @@ const deleteAMusic = ($event: Event, index: number) => {
         <div class="list__title">播放队列</div>
         <div class="list__info">
             <div style="width: 80px">
-                共{{ searchMusic($default).length }}首
+                共{{ searchMusic($default.datas).length }}首
             </div>
             <div class="list__search_disappear" v-if="!isShowSearch"></div>
             <input
@@ -80,7 +77,7 @@ const deleteAMusic = ($event: Event, index: number) => {
                 ></path>
             </svg>
             <svg
-                @click="$default = []"
+                @click="$default.datas = []"
                 class="mini-icon"
                 viewBox="0 0 1150 1150"
                 xmlns="http://www.w3.org/2000/svg"
@@ -96,10 +93,10 @@ const deleteAMusic = ($event: Event, index: number) => {
                 ></path>
             </svg>
         </div>
-        <div class="conntainner__playList" v-if="$default.length !== 0">
+        <div class="conntainner__playList" v-if="$default.datas.length !== 0">
             <div
                 class="playList__item"
-                v-for="(item, index) in searchMusic($default)"
+                v-for="(item, index) in searchMusic($default.datas)"
                 @click="playMusic(index)"
                 @mouseover="currentHoverIndex = index"
                 @mouseleave="currentHoverIndex = -1"
@@ -141,6 +138,20 @@ const deleteAMusic = ($event: Event, index: number) => {
                     </svg>
                     <!-- 添加到我喜欢 -->
                     <svg
+                        v-if="isInList(item, $love.datas)"
+                        @click="deleteMusicToList(item, $love, $event)"
+                        viewBox="0 0 1024 1024"
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="mini-icon"
+                    >
+                        <path
+                            d="M512 998.4c-19.2 0-38.4-12.8-38.4-19.2C454.4 966.4 128 640 83.2 595.2 32 537.6 0 467.2 0 396.8s32-147.2 83.2-198.4c51.2-51.2 121.6-83.2 198.4-83.2 76.8 0 147.2 32 198.4 83.2C492.8 211.2 505.6 224 512 236.8c6.4-12.8 19.2-25.6 32-38.4 51.2-51.2 121.6-83.2 198.4-83.2 76.8 0 147.2 32 198.4 83.2C992 249.6 1024 320 1024 396.8c0 76.8-32 147.2-83.2 198.4C896 640 569.6 966.4 550.4 979.2 550.4 985.6 531.2 998.4 512 998.4z"
+                            fill="#FF7878"
+                        ></path>
+                    </svg>
+                    <svg
+                        v-else
+                        @click="addMusicToList(item, $love, $event)"
                         class="mini-icon"
                         viewBox="0 0 1031 1024"
                         xmlns="http://www.w3.org/2000/svg"

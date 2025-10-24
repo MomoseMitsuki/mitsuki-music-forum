@@ -1,51 +1,16 @@
 <script setup lang="ts">
-import type { Music } from "@/types"
-import { getPlayListService } from "~/apis/user"
+import type { MusicList } from "@/types"
+import { isInList } from "~/utils/utils"
 import { usePlaySettingStore } from "~/stores/index"
-const router = useRouter()
+import { useMusicOper } from "@/composables/useMusicOper"
+import { useListOper } from "@/composables/useListOper"
+
+const { playMusic, playVideo, addMusicToList, deleteMusicToList } =
+    useMusicOper()
+const { playMusicList } = useListOper()
 const playSettingStore = usePlaySettingStore()
-const uiStatusStore = useUiStatusStore()
-const { currentPlayIndex, $default } = storeToRefs(playSettingStore)
-const prop = defineProps({
-    type: String
-})
-const list = reactive<Array<Music>>([])
-getPlayListService().then((res) => {
-    for (let i = 0; i < res.datas.length; i++) {
-        list.push(res.datas[i])
-    }
-})
-const playMusic = function (e: MouseEvent, it: Music) {
-    e.stopPropagation()
-    uiStatusStore.jump(e)
-    for (let i = 0; i < $default.value.length; i++) {
-        if ($default.value[i].id === it.id) {
-            // todo: play the music
-            currentPlayIndex.value = i
-            return
-        }
-    }
-    // add the playlist and play the music
-    $default.value.push(it)
-    currentPlayIndex.value = $default.value.length - 1
-}
-const playVideo = ($event: Event, id: string) => {
-    $event.stopPropagation()
-    router.push({
-        path: `/video/${id}`
-    })
-}
-const changePlayList = ($event: MouseEvent) => {
-    if (list.length === 0) return
-    uiStatusStore.jump($event)
-    $default.value.splice(0, $default.value.length)
-    for (const item of list) {
-        $default.value.push(item)
-    }
-    currentPlayIndex.value = 0
-    playSettingStore.audio.currentTime = 0
-    playSettingStore.audio.play()
-}
+const { $love } = storeToRefs(playSettingStore)
+const props = defineProps<{ list: MusicList }>()
 </script>
 
 <template>
@@ -53,8 +18,8 @@ const changePlayList = ($event: MouseEvent) => {
         <div class="tracklist__containner">
             <img src="/trackList/default2.jpg" alt="专辑封面" />
             <div class="info__containner">
-                {{ prop.type }}
-                <div class="play-btn" @click="changePlayList($event)">
+                {{ props.list.name === "$love" ? "收藏歌曲" : props.list.name }}
+                <div class="play-btn" @click="playMusicList(props.list)">
                     <svg
                         viewBox="0 0 1024 1024"
                         xmlns="http://www.w3.org/2000/svg"
@@ -68,7 +33,10 @@ const changePlayList = ($event: MouseEvent) => {
             </div>
         </div>
         <div style="height: 50px"></div>
-        <div class="items__containner" v-for="(item, index) in list">
+        <div
+            class="items__containner"
+            v-for="(item, index) in props.list.datas"
+        >
             <div class="song__item" @click="playMusic($event, item)">
                 <div style="width: 45px; text-align: end">
                     {{ index + 1 >= 10 ? index + 1 : `0${index + 1}` }}
@@ -82,6 +50,20 @@ const changePlayList = ($event: MouseEvent) => {
                     {{ formatTime(item.duration) }}
                 </div>
                 <svg
+                    v-if="isInList(item, $love.datas)"
+                    @click="deleteMusicToList(item, $love, $event)"
+                    viewBox="0 0 1024 1024"
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="mini-icon"
+                >
+                    <path
+                        d="M512 998.4c-19.2 0-38.4-12.8-38.4-19.2C454.4 966.4 128 640 83.2 595.2 32 537.6 0 467.2 0 396.8s32-147.2 83.2-198.4c51.2-51.2 121.6-83.2 198.4-83.2 76.8 0 147.2 32 198.4 83.2C492.8 211.2 505.6 224 512 236.8c6.4-12.8 19.2-25.6 32-38.4 51.2-51.2 121.6-83.2 198.4-83.2 76.8 0 147.2 32 198.4 83.2C992 249.6 1024 320 1024 396.8c0 76.8-32 147.2-83.2 198.4C896 640 569.6 966.4 550.4 979.2 550.4 985.6 531.2 998.4 512 998.4z"
+                        fill="#FF7878"
+                    ></path>
+                </svg>
+                <svg
+                    v-else
+                    @click="addMusicToList(item, $love, $event)"
                     class="mini-icon"
                     viewBox="0 0 1031 1024"
                     xmlns="http://www.w3.org/2000/svg"
@@ -119,7 +101,10 @@ const changePlayList = ($event: MouseEvent) => {
                 </svg>
                 <!-- 删除单曲 -->
                 <svg
-                    v-if="prop.type !== '收藏歌曲'"
+                    v-if="
+                        props.list.name !== '$love' &&
+                        props.list.type === 'user'
+                    "
                     class="mini-icon"
                     viewBox="0 0 1024 1024"
                     xmlns="http://www.w3.org/2000/svg"

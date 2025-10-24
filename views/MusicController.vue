@@ -1,29 +1,34 @@
 <script setup lang="ts">
+import MusicLyric from "./MusicLyric.vue"
+import PlayList from "./PlayList.vue"
 import { storeToRefs } from "pinia"
 import { usePlaySettingStore, useUiStatusStore } from "@/stores"
 import { formatTime, formatSingers } from "@/utils/format"
-import { debounce,isInList } from "@/utils/utils"
-import emptyLoveSvg from "~/assets/icons/emptyLove.svg"
-import fullLoveSvg from "~/assets/icons/fullLove.svg"
+import { debounce, isInList } from "@/utils/utils"
+import { useMusicOper } from "@/composables/useMusicOper"
+
 const playSettingStore = usePlaySettingStore()
 const uiStatusStore = useUiStatusStore()
+const { addMusicToList, deleteMusicToList } = useMusicOper()
 const { $default, $love, isLoad, volume, playMode, currentPlayIndex, isPlay } =
     storeToRefs(playSettingStore)
 const { isShowLyric } = storeToRefs(uiStatusStore)
 // VO Views Object
 const views = reactive({
     infoName:
-        $default.value.length === 0
+        $default.value.datas.length === 0
             ? "--"
-            : $default.value[currentPlayIndex.value].name,
+            : $default.value.datas[currentPlayIndex.value].name,
     infoSinger:
-        $default.value.length === 0
+        $default.value.datas.length === 0
             ? "--"
-            : formatSingers($default.value[currentPlayIndex.value].singer),
+            : formatSingers(
+                  $default.value.datas[currentPlayIndex.value].singer
+              ),
     avater:
-        $default.value.length === 0
+        $default.value.datas.length === 0
             ? ""
-            : $default.value[currentPlayIndex.value].avater,
+            : $default.value.datas[currentPlayIndex.value].avater,
     duration: 0,
     currentTime: 0
 })
@@ -45,11 +50,11 @@ watch(
 
 watch(
     () => {
-        if ($default.value.length === 0) return
-        return $default.value[currentPlayIndex.value].id
+        if ($default.value.datas.length === 0) return
+        return $default.value.datas[currentPlayIndex.value].id
     }, // if the id changed, we change the music
     () => {
-        if ($default.value.length === 0) {
+        if ($default.value.datas.length === 0) {
             playSettingStore.audio.currentTime = 0
             playSettingStore.audio.pause()
             views.currentTime = 0
@@ -59,10 +64,12 @@ watch(
             isShowLyric.value = false
             return
         }
-        if ($default.value[currentPlayIndex.value].name === views.infoName)
+        if (
+            $default.value.datas[currentPlayIndex.value].name === views.infoName
+        )
             return
         const { path, name, singer, avater } =
-            $default.value[currentPlayIndex.value]
+            $default.value.datas[currentPlayIndex.value]
         const checkMusic = debounce(() => {
             playSettingStore.audio.src = path
             playSettingStore.audio.currentTime = 0
@@ -91,18 +98,19 @@ watch(
     }
 )
 onBeforeMount(() => {
+    console.log("containner beforeMount")
     audio = new Audio()
     playSettingStore.audio = audio
-    $default.value.length === 0
+    $default.value.datas.length === 0
         ? ""
-        : (audio.src = $default.value[currentPlayIndex.value].path)
+        : (audio.src = $default.value.datas[currentPlayIndex.value].path)
     audio.onloadedmetadata = () => {
         isLoad.value = true
         views.duration = audio.duration
         audio.volume = volume.value
     }
     audio.ontimeupdate = () => {
-        if ($default.value.length === 0) {
+        if ($default.value.datas.length === 0) {
             views.currentTime = 0
         }
         if (!isDrag.value) {
@@ -126,7 +134,7 @@ onMounted(() => {
  * It calculates the relative percentage and assigns it to the variable currentTime.
  */
 const dragMusicBar = (e: MouseEvent) => {
-    if (!isLoad.value || $default.value.length === 0) return
+    if (!isLoad.value || $default.value.datas.length === 0) return
     const ptr = document.createElement("style")
     ptr.innerHTML = `* {cursor:pointer !important;}`
     document.head.appendChild(ptr)
@@ -191,7 +199,7 @@ const dragVolumeBar = (e: MouseEvent) => {
  * If it is paused, play it; if it is playing, pause it. Also, update the isPlay state accordingly.
  */
 const togglePlay = () => {
-    if (!isLoad.value || $default.value.length === 0) return
+    if (!isLoad.value || $default.value.datas.length === 0) return
     if (audio.paused) {
         playSettingStore.audio.play()
         isPlay.value = true
@@ -222,35 +230,35 @@ const showVolumeBar = () => {
     clearTimeout(_timer)
     isShowVolumeBar.value = true
 }
-const defaultPlay = (len:number) => {
+const defaultPlay = (len: number) => {
     if (currentPlayIndex.value === len - 1) {
-            playSettingStore.audio.currentTime = 0
+        playSettingStore.audio.currentTime = 0
     } else {
         currentPlayIndex.value++
     }
 }
-const randomPlay = (len:number) => {
+const randomPlay = (len: number) => {
     const org = currentPlayIndex.value
     while (org === currentPlayIndex.value) {
         currentPlayIndex.value = Math.floor(Math.random() * (len - 1)) + 1
     }
 }
-const loopListPlay = (len:number) => {
+const loopListPlay = (len: number) => {
     if (currentPlayIndex.value === len - 1) {
         currentPlayIndex.value = 0
     } else {
         currentPlayIndex.value++
     }
 }
-const loopMusicPlay = (len:number) => {
+const loopMusicPlay = (len: number) => {
     queueMicrotask(() => {
         playSettingStore.audio.currentTime = 0
         playSettingStore.audio.play()
     })
 }
-const playModeArray = [defaultPlay,randomPlay,loopListPlay,loopMusicPlay]
+const playModeArray = [defaultPlay, randomPlay, loopListPlay, loopMusicPlay]
 const endedMusic = () => {
-    const len = $default.value.length
+    const len = $default.value.datas.length
     if (len === 0) return
     else if (len === 1) {
         playSettingStore.audio.currentTime = 0
@@ -265,11 +273,12 @@ const prevMusic = () => {
         return
     }
     if (currentPlayIndex.value === 0) {
-        currentPlayIndex.value = $default.value.length - 1
+        currentPlayIndex.value = $default.value.datas.length - 1
     } else {
         currentPlayIndex.value--
     }
 }
+// Transition 组件控制 MusicLyric 歌词界面过渡
 const beforeEnter = (e: Element) => {
     const el = e as HTMLElement
     el.style.transform = `translateY(100%)`
@@ -326,7 +335,7 @@ const afterLeave = (e: Element) => {
         </div>
         <!-- music avater -->
         <div class="controller__avater-container">
-            <img :src="views.avater" v-if="$default.length !== 0" />
+            <img :src="views.avater" v-if="$default.datas.length !== 0" />
             <svg
                 viewBox="0 0 1024 1024"
                 xmlns="http://www.w3.org/2000/svg"
@@ -412,16 +421,46 @@ const afterLeave = (e: Element) => {
             ></path>
         </svg>
         <!-- isLove button -->
-        <img
-            :src="
-                $default.length === 0 &&
-                isInList($default[currentPlayIndex],$love)
-                    ? emptyLoveSvg
-                    : fullLoveSvg
+        <svg
+            v-if="isInList($default.datas[currentPlayIndex], $love.datas)"
+            @click="
+                deleteMusicToList(
+                    $default.datas[currentPlayIndex],
+                    $love,
+                    $event
+                )
             "
-            style="margin: 0 18px"
+            viewBox="0 0 1024 1024"
+            xmlns="http://www.w3.org/2000/svg"
+            style="margin: 0 25px"
             class="mini-icon"
-        />
+        >
+            <path
+                d="M512 998.4c-19.2 0-38.4-12.8-38.4-19.2C454.4 966.4 128 640 83.2 595.2 32 537.6 0 467.2 0 396.8s32-147.2 83.2-198.4c51.2-51.2 121.6-83.2 198.4-83.2 76.8 0 147.2 32 198.4 83.2C492.8 211.2 505.6 224 512 236.8c6.4-12.8 19.2-25.6 32-38.4 51.2-51.2 121.6-83.2 198.4-83.2 76.8 0 147.2 32 198.4 83.2C992 249.6 1024 320 1024 396.8c0 76.8-32 147.2-83.2 198.4C896 640 569.6 966.4 550.4 979.2 550.4 985.6 531.2 998.4 512 998.4z"
+                fill="#FF7878"
+            ></path>
+        </svg>
+        <svg
+            v-else
+            @click="
+                ($event) => {
+                    if (!$default.datas[currentPlayIndex]) return
+                    addMusicToList(
+                        $default.datas[currentPlayIndex],
+                        $love,
+                        $event
+                    )
+                }
+            "
+            viewBox="0 0 1031 1024"
+            xmlns="http://www.w3.org/2000/svg"
+            style="margin: 0 25px"
+            class="mini-icon"
+        >
+            <path
+                d="M515.38944 957.85984c-21.54496 0-36.87424-14.25408-40.76544-18.26816-17.62304-17.3568-347.25888-342.23104-392.43776-391.168C29.44 495.70816 0 424.6528 0 349.0816s29.44-146.62656 82.8928-200.06912c53.42208-53.43232 124.47744-82.87232 200.07936-82.87232 75.56096 0 146.60608 29.42976 200.05888 82.87232 11.90912 11.91936 22.7328 24.94464 32.3584 38.95296 9.6256-14.01856 20.44928-27.0336 32.34816-38.95296 53.44256-53.44256 124.49792-82.87232 200.07936-82.87232 75.56096 0 146.61632 29.42976 200.07936 82.87232 53.43232 53.46304 82.86208 124.50816 82.86208 200.06912 0 75.5712-29.42976 146.61632-82.86208 200.07936-44.50304 48.20992-374.23104 373.18656-391.74144 390.44096C552.28416 943.60576 536.9344 957.85984 515.38944 957.85984zM282.97216 117.34016c-61.92128 0-120.1152 24.10496-163.87072 67.87072C75.3152 228.98688 51.2 287.19104 51.2 349.0816c0 61.9008 24.1152 120.10496 67.8912 163.88096 45.33248 49.05984 388.28032 387.0208 391.7312 390.42048 0.256 0.24576 0.512 0.512 0.74752 0.768 0.82944 0.78848 2.72384 2.02752 3.81952 2.42688 1.10592-0.39936 3.05152-1.67936 4.16768-2.77504 3.86048-3.81952 346.79808-341.78048 391.43424-390.11328 44.47232-44.52352 68.56704-102.71744 68.56704-164.608s-24.10496-120.08448-67.87072-163.86048c-43.76576-43.76576-101.96992-67.87072-163.87072-67.87072s-120.10496 24.10496-163.88096 67.87072c-18.46272 18.4832-33.75104 40.32512-45.42464 64.9216-4.23936 8.92928-13.24032 14.63296-23.13216 14.63296l0 0c-9.89184 0-18.8928-5.70368-23.13216-14.63296-11.66336-24.576-26.94144-46.42816-45.44512-64.9216C403.0464 141.44512 344.86272 117.34016 282.97216 117.34016z"
+            ></path>
+        </svg>
         <!-- music progress bar -->
         <div class="controller__progress" @mousedown="dragMusicBar($event)">
             <div
@@ -559,7 +598,7 @@ const afterLeave = (e: Element) => {
             class="controller__lyric"
             @click="
                 () => {
-                    if ($default.length !== 0) isShowLyric = !isShowLyric
+                    if ($default.datas.length !== 0) isShowLyric = !isShowLyric
                 }
             "
         >
